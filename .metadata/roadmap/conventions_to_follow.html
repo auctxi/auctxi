@@ -1,0 +1,1431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AuctXI — Development Convention</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#0a0a0c;
+    --bg-2:#101013;
+    --surface:#15151a;
+    --surface-2:#1c1c22;
+    --border:rgba(255,255,255,0.08);
+    --border-strong:rgba(255,255,255,0.16);
+    --fg:#f4f4f5;
+    --fg-dim:#a1a1aa;
+    --fg-muted:#6b6b75;
+    --gold:#fbbf24;
+    --gold-soft:#f59e0b;
+    --red:#ef4444;
+    --cyan:#22d3ee;
+    --green:#34d399;
+    --serif:'Instrument Serif', serif;
+    --sans:'Space Grotesk', sans-serif;
+    --mono:'JetBrains Mono', monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg);
+    color:var(--fg);
+    font-family:var(--sans);
+    font-size:15px;
+    line-height:1.6;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  body::before{
+    content:"";
+    position:fixed;inset:0;
+    pointer-events:none;
+    z-index:1;
+    opacity:0.035;
+    background-image:url("data:image/svg+xml;utf8,<svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+  .shell{display:grid;grid-template-columns:260px 1fr;max-width:1440px;margin:0 auto;position:relative;z-index:2}
+  
+  /* SIDENAV */
+  .sidenav{
+    position:sticky;top:0;height:100vh;
+    padding:32px 24px;
+    border-right:1px solid var(--border);
+    display:flex;flex-direction:column;
+    background:linear-gradient(180deg,rgba(15,15,18,0.6),rgba(10,10,12,0.95));
+    backdrop-filter:blur(8px);
+    overflow-y:auto;
+  }
+  .sidenav::-webkit-scrollbar{width:4px}
+  .sidenav::-webkit-scrollbar-thumb{background:var(--border)}
+  
+  .brand{display:flex;align-items:center;gap:10px;margin-bottom:36px;text-decoration:none}
+  .brand-mark{
+    width:36px;height:36px;border-radius:8px;
+    background:linear-gradient(135deg,var(--gold),#b45309);
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--serif);font-style:italic;font-size:22px;color:#0a0a0c;
+    box-shadow:0 4px 20px rgba(251,191,36,0.25);
+  }
+  .brand-name{font-family:var(--serif);font-size:24px;letter-spacing:-0.02em;color:var(--fg)}
+  .brand-sub{font-size:10px;color:var(--fg-muted);letter-spacing:0.2em;text-transform:uppercase;margin-top:2px}
+  
+  .nav-section{font-size:10px;letter-spacing:0.2em;color:var(--fg-muted);text-transform:uppercase;margin:24px 0 10px;padding-left:12px}
+  .nav-link{
+    display:block;padding:7px 12px;border-radius:6px;
+    color:var(--fg-dim);text-decoration:none;font-size:12.5px;
+    transition:all 0.2s;border-left:2px solid transparent;
+    margin-left:-2px;
+  }
+  .nav-link:hover{color:var(--fg);background:rgba(255,255,255,0.03)}
+  .nav-link.active{color:var(--gold);border-left-color:var(--gold);background:rgba(251,191,36,0.06)}
+  .nav-link .num{font-family:var(--mono);font-size:10px;color:var(--fg-muted);margin-right:8px}
+  .nav-link.active .num{color:var(--gold)}
+  
+  .progress-rail{
+    margin-top:auto;
+    padding-top:24px;border-top:1px solid var(--border);
+  }
+  .progress-track{height:3px;background:var(--surface-2);border-radius:2px;overflow:hidden}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--gold),#f59e0b);width:0%;transition:width 0.1s}
+  .progress-label{font-size:10px;color:var(--fg-muted);letter-spacing:0.15em;text-transform:uppercase;margin-top:8px;display:flex;justify-content:space-between}
+  
+  /* MAIN */
+  main{padding:0 64px 120px;max-width:1100px}
+  
+  /* HERO */
+  .hero{
+    min-height:100vh;
+    display:flex;flex-direction:column;justify-content:center;
+    position:relative;padding:80px 0 60px;
+  }
+  .hero-canvas{position:absolute;inset:0;z-index:0;opacity:0.4}
+  .hero-content{position:relative;z-index:2}
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:10px;
+    padding:6px 14px;border:1px solid var(--border-strong);
+    border-radius:999px;font-size:11px;letter-spacing:0.25em;
+    text-transform:uppercase;color:var(--fg-dim);
+    background:rgba(255,255,255,0.02);margin-bottom:32px;
+  }
+  .eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--gold);box-shadow:0 0 12px var(--gold);animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+  
+  h1.hero-title{
+    font-family:var(--serif);
+    font-size:clamp(56px,8vw,120px);
+    line-height:0.95;letter-spacing:-0.03em;
+    font-weight:400;margin-bottom:28px;
+  }
+  .hero-title em{color:var(--gold);font-style:italic}
+  .hero-lede{
+    font-size:20px;color:var(--fg-dim);max-width:680px;
+    line-height:1.55;margin-bottom:40px;
+  }
+  .hero-stats{display:flex;gap:40px;flex-wrap:wrap;margin-bottom:48px}
+  .stat-block .stat-num{font-family:var(--serif);font-size:42px;line-height:1;color:var(--fg)}
+  .stat-block .stat-num em{color:var(--gold);font-style:italic}
+  .stat-block .stat-label{font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--fg-muted);margin-top:6px}
+  
+  .callout {
+    border-left:3px solid var(--gold);
+    background:linear-gradient(90deg,rgba(251,191,36,0.08),transparent);
+    padding:24px 28px;margin:40px 0;border-radius:0 8px 8px 0;
+  }
+  .callout p{margin:0;color:var(--fg);font-size:16px}
+  .callout em{color:var(--gold);font-family:var(--serif);font-style:italic;font-size:20px;margin-right:6px}
+  .callout code{font-family:var(--mono);color:var(--gold);background:rgba(251,191,36,0.1);padding:2px 6px;border-radius:4px;font-size:13px}
+  
+  /* SECTIONS */
+  section{padding:60px 0;border-top:1px solid var(--border);scroll-margin-top:40px}
+  .section-num{
+    font-family:var(--mono);font-size:11px;letter-spacing:0.3em;
+    color:var(--gold);text-transform:uppercase;margin-bottom:16px;
+    display:flex;align-items:center;gap:12px;
+  }
+  .section-num::before{content:"";width:24px;height:1px;background:var(--gold)}
+  h2.section-title{
+    font-family:var(--serif);font-size:clamp(36px,5vw,56px);
+    line-height:1.05;letter-spacing:-0.02em;font-weight:400;
+    margin-bottom:20px;
+  }
+  h2.section-title em{color:var(--gold);font-style:italic}
+  .section-lede{font-size:17px;color:var(--fg-dim);max-width:680px;margin-bottom:48px;line-height:1.6}
+  
+  /* RULE CARDS */
+  .rule{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:28px 32px;
+    margin-bottom:24px;
+    transition:border-color 0.3s;
+    position:relative;
+    overflow:hidden;
+  }
+  .rule:hover{border-color:var(--border-strong)}
+  .rule-header{
+    display:flex;align-items:baseline;gap:16px;
+    margin-bottom:16px;
+  }
+  .rule-num{
+    font-family:var(--serif);font-size:32px;
+    color:var(--gold);font-style:italic;
+    line-height:1;min-width:40px;
+  }
+  .rule-title{
+    font-family:var(--sans);font-size:18px;font-weight:600;
+    color:var(--fg);letter-spacing:-0.01em;
+  }
+  .rule-body p{margin-bottom:12px;color:var(--fg-dim)}
+  .rule-body p strong{color:var(--fg);font-weight:500}
+  .rule-body p:last-child{margin-bottom:0}
+  
+  /* CODE BLOCKS */
+  .code-block{
+    background:#08080a;border:1px solid var(--border);
+    border-radius:8px;padding:20px 24px;
+    font-family:var(--mono);font-size:12.5px;line-height:1.7;
+    overflow-x:auto;margin:16px 0;position:relative;
+  }
+  .code-block::before{
+    content:attr(data-lang);
+    position:absolute;top:10px;right:16px;
+    font-size:9px;color:var(--fg-muted);letter-spacing:0.15em;
+    text-transform:uppercase;
+  }
+  .code-block.good{border-left:3px solid var(--green)}
+  .code-block.bad{border-left:3px solid var(--red)}
+  .code-block .kw{color:#fbbf24}
+  .code-block .str{color:#34d399}
+  .code-block .com{color:#6b6b75;font-style:italic}
+  .code-block .dir{color:#22d3ee}
+  .code-block .red{color:#ef4444}
+  .code-block .indent{padding-left:20px}
+  .code-block .indent-2{padding-left:40px}
+  
+  .label-tag {
+    display:inline-block;
+    font-family:var(--mono);font-size:10px;
+    padding:3px 8px;border-radius:4px;
+    letter-spacing:0.1em;text-transform:uppercase;
+    margin-bottom:8px;
+  }
+  .label-tag.good{color:var(--green);background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.2)}
+  .label-tag.bad{color:var(--red);background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2)}
+  
+  .flow{
+    background:#08080a;border:1px solid var(--border);
+    border-radius:8px;padding:18px 22px;margin:16px 0;
+    font-family:var(--mono);font-size:12px;line-height:1.9;
+    color:var(--fg-dim);white-space:pre;overflow-x:auto;
+  }
+  .flow .arrow{color:var(--gold)}
+  .flow .key{color:var(--fg)}
+  
+  h3.sub-title{
+    font-family:var(--sans);font-size:13px;font-weight:600;
+    letter-spacing:0.12em;text-transform:uppercase;
+    color:var(--fg);margin:24px 0 12px;
+    display:flex;align-items:center;gap:10px;
+  }
+  h3.sub-title::before{content:"";width:6px;height:6px;background:var(--gold);border-radius:1px;transform:rotate(45deg)}
+  
+  /* 10 COMMANDMENTS */
+  .commandments-grid{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+    gap:16px;margin-top:32px;
+  }
+  .commandment{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:12px;padding:24px;
+    position:relative;
+    transition:all 0.3s;
+  }
+  .commandment:hover{
+    border-color:var(--gold);
+    transform:translateY(-2px);
+    box-shadow:0 12px 32px rgba(0,0,0,0.4);
+  }
+  .com-num{
+    font-family:var(--serif);font-size:56px;
+    color:var(--gold);font-style:italic;
+    line-height:1;opacity:0.3;
+    position:absolute;top:16px;right:20px;
+  }
+  .com-text{
+    font-size:14px;color:var(--fg);
+    position:relative;z-index:2;
+    line-height:1.5;font-weight:500;
+  }
+  
+  /* TOC GRID */
+  .toc-grid{
+    display:grid;grid-template-columns:repeat(2,1fr);gap:12px;
+    margin-top:24px;
+  }
+  .toc-item{
+    background:var(--surface);border:1px solid var(--border);
+    border-radius:8px;padding:12px 16px;
+    display:flex;align-items:center;gap:12px;
+    text-decoration:none;transition:all 0.2s;
+  }
+  .toc-item:hover{border-color:var(--gold);background:rgba(251,191,36,0.03)}
+  .toc-num{font-family:var(--mono);font-size:11px;color:var(--gold)}
+  .toc-text{font-size:13px;color:var(--fg-dim)}
+  .toc-item:hover .toc-text{color:var(--fg)}
+  
+  /* FOOTER */
+  footer{
+    border-top:1px solid var(--border);
+    padding:60px 0 40px;margin-top:80px;
+    display:flex;justify-content:space-between;align-items:end;
+    flex-wrap:wrap;gap:24px;
+  }
+  .footer-brand{font-family:var(--serif);font-size:32px;color:var(--fg)}
+  .footer-brand em{color:var(--gold);font-style:italic}
+  .footer-meta{font-size:11px;color:var(--fg-muted);letter-spacing:0.15em;text-transform:uppercase;text-align:right}
+  
+  /* REVEAL ANIMATIONS */
+  .reveal{opacity:0;transform:translateY(24px);transition:opacity 0.8s ease,transform 0.8s ease}
+  .reveal.in{opacity:1;transform:translateY(0)}
+  
+  /* MOBILE */
+  @media (max-width:1024px){
+    .shell{grid-template-columns:1fr}
+    .sidenav{position:fixed;top:0;left:-280px;width:280px;z-index:100;transition:left 0.3s}
+    .sidenav.open{left:0}
+    main{padding:0 32px 80px}
+    .menu-toggle{display:flex !important}
+    .toc-grid{grid-template-columns:1fr}
+  }
+  .menu-toggle{
+    display:none;position:fixed;top:20px;right:20px;z-index:101;
+    width:44px;height:44px;border-radius:8px;
+    background:var(--surface);border:1px solid var(--border-strong);
+    align-items:center;justify-content:center;cursor:pointer;
+  }
+  .menu-toggle span{width:18px;height:1.5px;background:var(--fg);position:relative}
+  .menu-toggle span::before,.menu-toggle span::after{
+    content:"";position:absolute;left:0;width:18px;height:1.5px;background:var(--fg);
+  }
+  .menu-toggle span::before{top:-6px}
+  .menu-toggle span::after{top:6px}
+</style>
+</head>
+<body>
+
+<button class="menu-toggle" onclick="document.querySelector('.sidenav').classList.toggle('open')"><span></span></button>
+
+<div class="shell">
+
+  <!-- SIDENAV -->
+  <aside class="sidenav">
+    <a href="#top" class="brand">
+      <div class="brand-mark">A</div>
+      <div>
+        <div class="brand-name">AuctXI</div>
+        <div class="brand-sub">Convention</div>
+      </div>
+    </a>
+
+    <div class="nav-section">Workflow</div>
+    <a class="nav-link" href="#git"><span class="num">01</span>Git & Branching</a>
+    <a class="nav-link" href="#commits"><span class="num">02</span>Commits & PRs</a>
+    
+    <div class="nav-section">Backend</div>
+    <a class="nav-link" href="#java"><span class="num">03</span>Java & Spring</a>
+    <a class="nav-link" href="#api"><span class="num">04</span>API & Responses</a>
+    <a class="nav-link" href="#data"><span class="num">05</span>Data & Validation</a>
+    <a class="nav-link" href="#db"><span class="num">06</span>Database</a>
+    
+    <div class="nav-section">Frontend</div>
+    <a class="nav-link" href="#react"><span class="num">07</span>React Standards</a>
+    <a class="nav-link" href="#env"><span class="num">08</span>Env & Security</a>
+    
+    <div class="nav-section">Quality</div>
+    <a class="nav-link" href="#testing"><span class="num">09</span>Testing</a>
+    <a class="nav-link" href="#quality"><span class="num">10</span>Code Quality</a>
+    <a class="nav-link" href="#business"><span class="num">11</span>Business Logic</a>
+    
+    <div class="nav-section">Closing</div>
+    <a class="nav-link" href="#dod"><span class="num">12</span>Definition of Done</a>
+    <a class="nav-link" href="#commandments"><span class="num">13</span>10 Commandments</a>
+
+    <div class="progress-rail">
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-label"><span>Reading</span><span id="progressPct">0%</span></div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main id="top">
+
+    <!-- HERO -->
+    <div class="hero">
+      <canvas class="hero-canvas" id="heroCanvas"></canvas>
+      <div class="hero-content">
+        <div class="eyebrow"><span class="dot"></span>Team Development Convention · v1.0</div>
+        <h1 class="hero-title">The rules of <em>the build</em>.</h1>
+        <p class="hero-lede">Before the four of you touch a single line of AuctXI, agree on the contract. These rules prevent naming chaos, merge conflicts, duplicate code, and broken architectures. Keep them practical. Enforce them in PR reviews.</p>
+        <div class="hero-stats">
+          <div class="stat-block">
+            <div class="stat-num"><em>33</em></div>
+            <div class="stat-label">Development Rules</div>
+          </div>
+          <div class="stat-block">
+            <div class="stat-num"><em>04</em></div>
+            <div class="stat-label">Engineers Aligned</div>
+          </div>
+          <div class="stat-block">
+            <div class="stat-num"><em>01</em></div>
+            <div class="stat-label">Source of Truth</div>
+          </div>
+        </div>
+        <div class="callout">
+          <p><em>The Golden Rule —</em> Never code directly on <code>main</code> or <code>develop</code>. Every change starts from an updated <code>develop</code>, lives on a feature branch, and survives a cross-review before it merges back.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- GIT & BRANCHING -->
+    <section id="git">
+      <div class="section-num reveal">Section 01 — 04</div>
+      <h2 class="section-title reveal">Git, Branching <em>& Workflow</em>.</h2>
+      <p class="section-lede reveal">If Jira doesn't know about it, it didn't happen. If it's not on a feature branch, it doesn't ship.</p>
+
+      <!-- Rule 1 -->
+      <div class="rule reveal">
+        <div class="rule-header">
+          <div class="rule-num">01</div>
+          <div class="rule-title">Golden Rule: Never Code Directly on <code style="font-family:var(--mono);color:var(--gold)">main</code> or <code style="font-family:var(--mono);color:var(--gold)">develop</code></div>
+        </div>
+        <div class="rule-body">
+          <p>Every change starts from an updated <code style="font-family:var(--mono);color:var(--gold)">develop</code>.</p>
+          <div class="code-block" data-lang="bash">
+<span class="kw">git checkout develop</span>
+<span class="kw">git pull origin develop</span>
+<span class="kw">git checkout -b</span> feature/AUX-21-player-management
+          </div>
+          <div class="flow">
+Jira Ticket <span class="arrow">↓</span> Feature Branch <span class="arrow">↓</span> Code + Tests
+           <span class="arrow">↓</span> Commit <span class="arrow">↓</span> Push <span class="arrow">↓</span> Pull Request
+           <span class="arrow">↓</span> Code Review <span class="arrow">↓</span> <span class="key">Merge into develop</span>
+          </div>
+          <p><strong>main</strong> = stable/release code only.</p>
+        </div>
+      </div>
+
+      <!-- Rule 2 -->
+      <div class="rule reveal">
+        <div class="rule-header">
+          <div class="rule-num">02</div>
+          <div class="rule-title">Branch Naming Convention</div>
+        </div>
+        <div class="rule-body">
+          <div class="label-tag good">Use</div>
+          <div class="code-block good">
+feature/AUX-21-player-management
+feature/AUX-35-live-bidding
+bugfix/AUX-42-invalid-bid-validation
+hotfix/AUX-51-payment-failure
+test/AUX-60-auction-integration-tests
+docs/AUX-70-update-api-documentation
+          </div>
+          <div class="label-tag bad">Avoid</div>
+          <div class="code-block bad">
+vijay-branch
+new
+test
+final
+final2
+working
+latest
+          </div>
+          <p>The Jira ID tells everyone exactly why the branch exists.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- COMMITS & PRs -->
+    <section id="commits">
+      <div class="section-num reveal">Section 03 — 04</div>
+      <h2 class="section-title reveal">Commits <em>& Pull Requests</em>.</h2>
+
+      <!-- Rule 3 -->
+      <div class="rule reveal">
+        <div class="rule-header">
+          <div class="rule-num">03</div>
+          <div class="rule-title">Commit Message Convention</div>
+        </div>
+        <div class="rule-body">
+          <p>Follow simple conventional commits.</p>
+          <div class="code-block good">
+<span class="kw">feat:</span> add player registration API
+<span class="kw">fix:</span> prevent bids exceeding team purse
+<span class="kw">test:</span> add unit tests for BidService
+<span class="kw">docs:</span> update auction API documentation
+<span class="kw">refactor:</span> extract bid validation logic
+<span class="kw">chore:</span> configure Docker Compose
+          </div>
+          <div class="label-tag bad">Avoid</div>
+          <div class="code-block bad">
+changes
+done
+final
+update
+working now
+bug fixed
+          </div>
+          <p>Commit small logical changes instead of one massive end-of-day commit.</p>
+        </div>
+      </div>
+
+      <!-- Rule 4 -->
+      <div class="rule reveal">
+        <div class="rule-header">
+          <div class="rule-num">04</div>
+          <div class="rule-title">Pull Request Convention</div>
+        </div>
+        <div class="rule-body">
+          <p>Every PR should contain structured information.</p>
+          <div class="code-block" data-lang="PR Template">
+<span class="com">Title:</span>
+[AUX-21] Add Player Management
+
+<span class="com">Description:</span>
+Implemented CRUD operations for player management.
+
+<span class="com">Changes:</span>
+- Added Player entity
+- Added PlayerRepository
+- Added PlayerService
+- Added PlayerController
+- Added validation
+- Added unit tests
+
+<span class="com">Testing:</span>
+- Unit tests passed
+- Integration tests passed
+- API tested through Postman
+
+<span class="com">Jira:</span>
+AUX-21
+          </div>
+          <div class="callout" style="margin: 16px 0;">
+            <p><em>Rule —</em> Another team member must review it. <strong>Never approve and merge your own PR.</strong></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- JAVA & SPRING -->
+    <section id="java">
+      <div class="section-num reveal">Section 05 — 08</div>
+      <h2 class="section-title reveal">Java & <em>Spring Boot</em> Architecture.</h2>
+
+      <!-- Rule 5 -->
+      <div class="rule reveal">
+        <div class="rule-header">
+          <div class="rule-num">05</div>
+          <div class="rule-title">Java Naming Conventions</div>
+        </div>
+        <div class="rule-body">
+          <h3 class="sub-title">Classes — PascalCase</h3>
+          <div class="code-block">
+PlayerController
+PlayerService
+PlayerRepository
+Player
+PlayerRequestDto
+          </div>
+          <h3 class="sub-title">Variables and Methods — camelCase</h3>
+          <div class="code-block">
+playerName
+basePrice
+teamId
+
+getPlayerById()
+placeBid()
+createAuction()
+          </div>
+          <h3 class="sub-title">Constants — UPPER_SNAKE_CASE</h3>
+          <div class="code-block">
+MAX_SQUAD_SIZE
+DEFAULT_BID_INCREMENT
+MAX_TEAM_PURSE
+          </div>
+          <h3 class="sub-title">Packages — lowercase</h3>
+          <div class="code-block">
+com.auctxi.controller
+com.auctxi.service
+com.auctxi.repository
+com.auctxi.entity
+          </div>
+        </div>
+      </div>
+
+      <!-- Rule 6 -->
+      <div class="rule reveal">
+        <div class="rule-header">
+          <div class="rule-num">06</div>
+          <div class="rule-title">Spring Boot Package Structure</div>
+        </div>
+        <div class="rule-body">
+          <p>Everyone follows the same structure.</p>
+          <div class="code-block" data-lang="Structure">
+com.auctxi
+│
+├── <span class="dir">config</span>
+├── <span class="dir">controller</span>
+├── <span class="dir">dto</span>
+├── <span class="dir">entity</span>
+├── <span class="dir">exception</span>
+├── <span class="dir">mapper</span>
+├── <span class="dir">repository</span>
+├── <span class="dir">security</span>
+├── <span class="dir">service</span>
+└── <span class="dir">util</span>
+          </div>
+          <div class="label-tag bad">Don't randomly create</div>
+          <div class="code-block bad">
+helpers
+stuff
+common2
+temp
+new
+misc
+          </div>
+          <p>Create a package only when it has a clear responsibility.</p>
+        </div>
+      </div>
+
+      <!-- Rule 7 -->
+      <div class="rule reveal">
+        <div class="rule-header">
+          <div class="rule-num">07</div>
+          <div class="rule-title">Controller → Service → Repository</div>
+        </div>
+        <div class="rule-body">
+          <div class="flow">
+Request <span class="arrow">↓</span> Controller <span class="arrow">↓</span> Service <span class="arrow">↓</span> Repository <span class="arrow">↓</span> <span class="key">Database</span>
+          </div>
+          <p><strong>Controller:</strong> HTTP requests, request validation, HTTP responses. <em>Not business logic.</em></p>
+          <p><strong>Service:</strong> Business rules, bid validation, auction logic, player allocation.</p>
+          <p><strong>Repository:</strong> Database access.</p>
+          <p>For example, don't put complex bid logic inside <code style="font-family:var(--mono);color:var(--gold)">BidController</code>.</p>
+        </div>
+      </div>
+
+      <!-- Rule 8 -->
+      <div class="rule reveal">
+        <div class="rule-header">
+          <div class="rule-num">08</div>
+          <div class="rule-title">Use DTOs for APIs</div>
+        </div>
+        <div class="rule-body">
+          <p>Avoid exposing database entities directly.</p>
+          <div class="flow">
+<span class="com">Request:</span>
+React <span class="arrow">↓</span> PlayerRequestDto <span class="arrow">↓</span> Controller <span class="arrow">↓</span> Service <span class="arrow">↓</span> Player Entity <span class="arrow">↓</span> Database
+
+<span class="com">Response:</span>
+Database <span class="arrow">↓</span> Entity <span class="arrow">↓</span> PlayerResponseDto <span class="arrow">↓</span> React
+          </div>
+          <p>This keeps your API separate from your database model.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- API & RESPONSES -->
+    <section id="api">
+      <div class="section-num reveal">Section 09 — 11</div>
+      <h2 class="section-title reveal">API Design <em>& Error Handling</em>.</h2>
+
+      <!-- Rule 9 -->
+      <div class="rule reveal">
+        <div class="rule-header">
+          <div class="rule-num">09</div>
+          <div class="rule-title">REST API Naming Convention</div>
+        </div>
+        <div class="rule-body">
+          <p>Use nouns, not verbs. HTTP method already describes the operation.</p>
+          <div class="label-tag good">Good</div>
+          <div class="code-block good">
+GET    /api/players
+GET    /api/players/{id}
+POST   /api/players
+PUT    /api/players/{id}
+DELETE /api/players/{id}
+
+GET    /api/auctions
+POST   /api/auctions
+
+GET    /api/auctions/{id}/bids
+POST   /api/auctions/{id}/bids
+          </div>
+          <div class="label-tag bad">Avoid</div>
+          <div class="code-block bad">
+/getPlayers
+/addPlayer
+/deletePlayer
+/doBid
+/getAllTeams
+          </div>
+        </div>
+      </div>
+
+      <!-- Rule 10 -->
+      <div class="rule reveal">
+        <div class="rule-header">
+          <div class="rule-num">10</div>
+          <div class="rule-title">Standard API Responses</div>
+        </div>
+        <div class="rule-body">
+          <p>Keep error responses consistent. Don't have every controller returning completely different error formats.</p>
+          <div class="code-block" data-lang="JSON">
+{
+  <span class="str">"timestamp"</span>: <span class="str">"2026-07-20T10:30:00"</span>,
+  <span class="str">"status"</span>: 400,
+  <span class="str">"error"</span>: <span class="str">"Bad Request"</span>,
+  <span class="str">"message"</span>: <span class="str">"Bid amount exceeds available team purse"</span>,
+  <span class="str">"path"</span>: <span class="str">"/api/auctions/10/bids"</span>
+}
+          </div>
+        </div>
+      </div>
+
+      <!-- Rule 11 -->
+      <div class="rule reveal">
+        <div class="rule-header">
+          <div class="rule-num">11</div>
+          <div class="rule-title">Centralized Exception Handling</div>
+        </div>
+        <div class="rule-body">
+          <p>Don't write repetitive <code style="font-family:var(--mono);color:var(--gold)">try-catch</code> blocks in every controller. Use Spring's <code style="font-family:var(--mono);color:var(--gold)">@RestControllerAdvice</code> with <code style="font-family:var(--mono);color:var(--gold)">@ExceptionHandler</code>.</p>
+          <p>Create meaningful exceptions such as:</p>
+          <div class="code-block">
+PlayerNotFoundException
+TeamNotFoundException
+AuctionNotFoundException
+InvalidBidException
+InsufficientPurseException
+UnauthorizedAuctionAccessException
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DATA & VALIDATION -->
+    <section id="data">
+      <div class="section-num reveal">Section 12 — 13</div>
+      <h2 class="section-title reveal">Data Types <em>& Validation</em>.</h2>
+
+      <!-- Rule 12 -->
+      <div class="rule reveal">
+        <div class="rule-header">
+          <div class="rule-num">12</div>
+          <div class="rule-title">Validation at Boundaries</div>
+        </div>
+        <div class="rule-body">
+          <p>Validate data at the system boundary.</p>
+          <div class="code-block" data-lang="Java">
+<span class="kw">@NotBlank</span>
+<span class="kw">private</span> String playerName;
+
+<span class="kw">@Positive</span>
+<span class="kw">private</span> BigDecimal basePrice;
+          </div>
+          <p>Also validate business rules inside services. For bidding:</p>
+          <div class="flow">
+Auction must be LIVE <span class="arrow">↓</span> Player must be AVAILABLE
+<span class="arrow">↓</span> Team must be participating <span class="arrow">↓</span> Bid &gt; Current Bid
+<span class="arrow">↓</span> Bid follows minimum increment <span class="arrow">↓</span> Team has sufficient purse
+<span class="arrow">↓</span> <span class="key">Team has available squad slot</span>
+          </div>
+          <p><strong>Never trust data coming from the frontend.</strong></p>
+        </div>
+      </div>
+
+      <!-- Rule 13 -->
+      <div class="rule reveal">
+        <div class="rule-header">
+          <div class="rule-num">13</div>
+          <div class="rule-title">Use Correct Data Types (Especially for Money)</div>
+        </div>
+        <div class="rule-body">
+          <div class="label-tag bad">Don't use</div>
+          <div class="code-block bad">
+<span class="kw">float</span> price;
+<span class="kw">double</span> bidAmount;
+          </div>
+          <div class="label-tag good">Use</div>
+          <div class="code-block good">
+BigDecimal bidAmount;
+BigDecimal teamPurse;
+BigDecimal basePrice;
+          </div>
+          <p>Similarly, use proper date/time types rather than storing dates as strings.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- DATABASE -->
+    <section id="db">
+      <div class="section-num reveal">Section 25 — 26</div>
+      <h2 class="section-title reveal">Database <em>Standards</em>.</h2>
+
+      <!-- Rule 25 -->
+      <div class="rule reveal">
+        <div class="rule-header">
+          <div class="rule-num">25</div>
+          <div class="rule-title">Database Convention</div>
+        </div>
+        <div class="rule-body">
+          <p>Use consistent names.</p>
+          <div class="code-block">
+users
+players
+teams
+auctions
+bids
+payments
+          </div>
+          <h3 class="sub-title">Columns</h3>
+          <div class="code-block">
+player_id
+team_id
+auction_id
+created_at
+updated_at
+          </div>
+          <p>Define Primary keys, Foreign keys, Unique constraints, and NOT NULL constraints. Don't rely entirely on Java validation. Important data integrity rules should also exist at the database level where appropriate.</p>
+        </div>
+      </div>
+
+      <!-- Rule 26 -->
+      <div class="rule reveal">
+        <div class="rule-header">
+          <div class="rule-num">26</div>
+          <div class="rule-title">Database Changes Must Be Communicated</div>
+        </div>
+        <div class="rule-body">
+          <p>Don't silently modify the schema locally and expect everyone else to figure it out.</p>
+          <div class="flow">
+Developer <span class="arrow">↓</span> Schema change <span class="arrow">↓</span> Commit migration
+<span class="arrow">↓</span> Inform team <span class="arrow">↓</span> <span class="key">PR Review</span>
+          </div>
+          <p>For your short project, you can start with shared SQL migration scripts. If you have enough time, use <strong>Flyway</strong> with Spring Boot—but don't add it just for the sake of having another tool.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- REACT -->
+    <section id="react">
+      <div class="section-num reveal">Section 14 — 16</div>
+      <h2 class="section-title reveal">React & <em>Frontend</em> Standards.</h2>
+
+      <!-- Rule 14 -->
+      <div class="rule reveal">
+        <div class="rule-header">
+          <div class="rule-num">14</div>
+          <div class="rule-title">React Naming Convention</div>
+        </div>
+        <div class="rule-body">
+          <h3 class="sub-title">Components</h3>
+          <div class="code-block">
+PlayerCard.jsx
+AuctionCard.jsx
+LoginForm.jsx
+BidHistory.jsx
+          </div>
+          <h3 class="sub-title">Variables & Functions</h3>
+          <div class="code-block">
+playerName
+currentBid
+remainingPurse
+
+handleLogin()
+handleBid()
+fetchPlayers()
+          </div>
+          <h3 class="sub-title">Hooks</h3>
+          <div class="code-block">
+useAuth()
+useAuction()
+          </div>
+        </div>
+      </div>
+
+      <!-- Rule 15 -->
+      <div class="rule reveal">
+        <div class="rule-header">
+          <div class="rule-num">15</div>
+          <div class="rule-title">React Folder Convention</div>
+        </div>
+        <div class="rule-body">
+          <p>Avoid one giant <code style="font-family:var(--mono);color:var(--gold)">components</code> folder with 100 unrelated files.</p>
+          <div class="code-block" data-lang="src/">
+├── <span class="dir">assets/</span>
+├── <span class="dir">components/</span>
+│   ├── <span class="dir">common/</span>
+│   ├── <span class="dir">forms/</span>
+│   └── <span class="dir">layout/</span>
+├── <span class="dir">pages/</span>
+│   ├── <span class="dir">admin/</span>
+│   ├── <span class="dir">manager/</span>
+│   └── <span class="dir">team-owner/</span>
+├── <span class="dir">services/</span>
+├── <span class="dir">hooks/</span>
+├── <span class="dir">context/</span>
+├── <span class="dir">routes/</span>
+├── <span class="dir">utils/</span>
+└── <span class="dir">constants/</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rule 16 -->
+      <div class="rule reveal">
+        <div class="rule-header">
+          <div class="rule-num">16</div>
+          <div class="rule-title">Don't Call APIs Directly Everywhere</div>
+        </div>
+        <div class="rule-body">
+          <p>Keep API communication centralized. Components use the service instead of repeatedly writing Axios configuration.</p>
+          <div class="code-block" data-lang="services/">
+├── authService.js
+├── playerService.js
+├── teamService.js
+├── auctionService.js
+└── bidService.js
+          </div>
+          <div class="code-block" data-lang="JavaScript">
+<span class="kw">export const</span> getPlayers = () =&gt; {
+    <span class="kw">return</span> api.get(<span class="str">"/players"</span>);
+};
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ENV & SECURITY -->
+    <section id="env">
+      <div class="section-num reveal">Section 17 — 18, 27 — 29</div>
+      <h2 class="section-title reveal">Environment, Logging <em>& Security</em>.</h2>
+
+      <!-- Rule 17 -->
+      <div class="rule reveal">
+        <div class="rule-header">
+          <div class="rule-num">17</div>
+          <div class="rule-title">Environment Variables</div>
+        </div>
+        <div class="rule-body">
+          <p>Never hard-code: Database passwords, JWT secrets, Razorpay secrets, API keys.</p>
+          <div class="label-tag bad">Never commit</div>
+          <div class="code-block bad">
+.env
+application-prod.properties
+secrets.json
+          </div>
+          <div class="label-tag good">Commit templates</div>
+          <div class="code-block good" data-lang=".env.example">
+VITE_API_URL=
+
+DB_URL=
+DB_USERNAME=
+DB_PASSWORD=
+
+JWT_SECRET=
+
+RAZORPAY_KEY_ID=
+RAZORPAY_KEY_SECRET=
+          </div>
+          <p>Each developer maintains their own local values.</p>
+        </div>
+      </div>
+
+      <!-- Rule 18 -->
+      <div class="rule reveal">
+        <div class="rule-header">
+          <div class="rule-num">18</div>
+          <div class="rule-title">Logging Convention</div>
+        </div>
+        <div class="rule-body">
+          <div class="label-tag bad">Do not use random prints</div>
+          <div class="code-block bad">
+System.out.println(<span class="str">"here"</span>);
+System.out.println(<span class="str">"working"</span>);
+          </div>
+          <div class="label-tag good">Use proper logging</div>
+          <div class="code-block good">
+log.info()
+log.warn()
+log.error()
+log.debug()
+          </div>
+          <div class="code-block" data-lang="Java">
+log.info(<span class="str">"Auction {} started by manager {}"</span>, auctionId, managerId);
+          </div>
+          <p><strong>But never log:</strong> Passwords, JWT tokens, Razorpay secrets, Sensitive payment information.</p>
+        </div>
+      </div>
+
+      <!-- Rule 27 -->
+      <div class="rule reveal">
+        <div class="rule-header">
+          <div class="rule-num">27</div>
+          <div class="rule-title">Payment Rules</div>
+        </div>
+        <div class="rule-body">
+          <p>Never trust payment success from React. The backend must verify the transaction.</p>
+          <div class="flow">
+React <span class="arrow">↓</span> Payment Microservice <span class="arrow">↓</span> Razorpay
+<span class="arrow">↓</span> Payment Verification <span class="arrow">↓</span> Server confirms payment
+<span class="arrow">↓</span> <span class="key">Database updated</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rule 28 -->
+      <div class="rule reveal">
+        <div class="rule-header">
+          <div class="rule-num">28</div>
+          <div class="rule-title">Security Rules</div>
+        </div>
+        <div class="rule-body">
+          <p>All four developers must remember:</p>
+          <div class="code-block">
+- Hash passwords
+- Never store plain-text passwords
+- Never expose JWT secrets
+- Validate JWT server-side
+- Implement role-based authorization
+- Validate all input
+- Never trust frontend validation alone
+- Don't expose stack traces to users
+- Don't commit secrets
+          </div>
+        </div>
+      </div>
+
+      <!-- Rule 29 -->
+      <div class="rule reveal">
+        <div class="rule-header">
+          <div class="rule-num">29</div>
+          <div class="rule-title">Dependency Rule</div>
+        </div>
+        <div class="rule-body">
+          <p>Before adding a new npm, Maven, or NuGet package, ask: <em>Do we actually need it?</em></p>
+          <p>Don't add libraries just because a tutorial uses them. The fewer unnecessary dependencies, the easier your project is to maintain.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- TESTING -->
+    <section id="testing">
+      <div class="section-num reveal">Section 22 — 24</div>
+      <h2 class="section-title reveal">Testing <em>Standards</em>.</h2>
+
+      <!-- Rule 22 -->
+      <div class="rule reveal">
+        <div class="rule-header">
+          <div class="rule-num">22</div>
+          <div class="rule-title">Unit Testing Convention</div>
+        </div>
+        <div class="rule-body">
+          <p>Focus unit tests primarily on business logic. Example: <code style="font-family:var(--mono);color:var(--gold)">BidServiceTest</code></p>
+          <div class="code-block" data-lang="Test Methods">
+shouldAcceptValidBid()
+shouldRejectBidWhenAuctionIsClosed()
+shouldRejectBidBelowMinimumIncrement()
+shouldRejectBidWhenPurseIsInsufficient()
+shouldRejectBidWhenSquadLimitReached()
+          </div>
+          <p>Use the pattern:</p>
+          <div class="code-block">
+Arrange <span class="arrow">↓</span> Act <span class="arrow">↓</span> Assert
+<span class="com"># OR</span>
+Given <span class="arrow">↓</span> When <span class="arrow">↓</span> Then
+          </div>
+        </div>
+      </div>
+
+      <!-- Rule 23 -->
+      <div class="rule reveal">
+        <div class="rule-header">
+          <div class="rule-num">23</div>
+          <div class="rule-title">Integration Testing Convention</div>
+        </div>
+        <div class="rule-body">
+          <p>Test complete component interaction. Don't confuse unit tests with integration tests.</p>
+          <div class="flow">
+HTTP Request <span class="arrow">↓</span> Controller <span class="arrow">↓</span> Service
+<span class="arrow">↓</span> Repository <span class="arrow">↓</span> <span class="key">Test Database</span>
+          </div>
+          <p>Examples:</p>
+          <div class="code-block">
+POST /api/players
+POST /api/auth/login
+POST /api/auctions/{id}/bids
+          </div>
+        </div>
+      </div>
+
+      <!-- Rule 24 -->
+      <div class="rule reveal">
+        <div class="rule-header">
+          <div class="rule-num">24</div>
+          <div class="rule-title">Bug Fix Convention</div>
+        </div>
+        <div class="rule-body">
+          <p>Every significant bug gets a Jira ticket.</p>
+          <div class="code-block">
+<span class="com">AUX-107</span>
+Bid accepted when team purse is insufficient
+          </div>
+          <div class="code-block" data-lang="Branch">
+bugfix/AUX-107-bid-purse-validation
+          </div>
+          <p>Add a regression test where practical. Then fix the bug. <strong>This proves the bug doesn't return later.</strong></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CODE QUALITY -->
+    <section id="quality">
+      <div class="section-num reveal">Section 19 — 21, 30</div>
+      <h2 class="section-title reveal">Code <em>Quality</em>.</h2>
+
+      <!-- Rule 19 -->
+      <div class="rule reveal">
+        <div class="rule-header">
+          <div class="rule-num">19</div>
+          <div class="rule-title">Comments Convention</div>
+        </div>
+        <div class="rule-body">
+          <p>Don't write comments explaining obvious code. Use comments to explain <strong>why</strong>, not <strong>what</strong>.</p>
+          <div class="label-tag bad">Bad</div>
+          <div class="code-block bad">
+<span class="com">// Get player</span>
+Player player = repository.findById(id);
+          </div>
+          <div class="label-tag good">Good</div>
+          <div class="code-block good">
+<span class="com">// Reserve the minimum purse required to fill remaining squad slots</span>
+BigDecimal availableBidAmount = calculateAvailableBidAmount(team);
+          </div>
+          <p>Prefer self-explanatory method names over excessive comments.</p>
+        </div>
+      </div>
+
+      <!-- Rule 20 -->
+      <div class="rule reveal">
+        <div class="rule-header">
+          <div class="rule-num">20</div>
+          <div class="rule-title">Keep Methods Small</div>
+        </div>
+        <div class="rule-body">
+          <p>Avoid 300-line methods. Break logic into methods. A method should ideally have one clear responsibility.</p>
+          <div class="code-block good" data-lang="Java">
+<span class="kw">public void</span> conductAuction() {
+    validateAuctionStatus();
+    validateTeamEligibility();
+    validateBidAmount();
+    saveBid();
+    updateHighestBid();
+}
+          </div>
+        </div>
+      </div>
+
+      <!-- Rule 21 -->
+      <div class="rule reveal">
+        <div class="rule-header">
+          <div class="rule-num">21</div>
+          <div class="rule-title">Avoid Duplicate Code</div>
+        </div>
+        <div class="rule-body">
+          <p>If the same logic appears multiple times, consider extracting it. For example, don't implement purse validation independently in three controllers. Have one clear business method.</p>
+          <p>But don't over-engineer either.</p>
+          <div class="callout" style="margin: 16px 0;">
+            <p><em>Rule —</em> Abstract when duplication becomes meaningful, not before.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rule 30 -->
+      <div class="rule reveal">
+        <div class="rule-header">
+          <div class="rule-num">30</div>
+          <div class="rule-title">Code Formatting</div>
+        </div>
+        <div class="rule-body">
+          <p>Everyone should use automatic formatting. Don't waste PR reviews arguing about spaces and indentation.</p>
+          <div class="code-block">
+<span class="com"># React:</span> Prettier + ESLint
+<span class="com"># Java:</span> IDE formatting consistently
+<span class="com"># C#:</span> Visual Studio / .NET formatting
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BUSINESS LOGIC -->
+    <section id="business">
+      <div class="section-num reveal">Section 33</div>
+      <h2 class="section-title reveal">The Most Important <em>Business Logic</em> Rule.</h2>
+
+      <!-- Rule 33 -->
+      <div class="rule reveal" style="border-color: var(--gold);">
+        <div class="rule-header">
+          <div class="rule-num">33</div>
+          <div class="rule-title">Data Consistency & Concurrency</div>
+        </div>
+        <div class="rule-body">
+          <p>For critical operations such as bidding and payment, think about <strong>data consistency and concurrency</strong>.</p>
+          <p>Imagine:</p>
+          <div class="flow">
+Team A bids ₹10 lakh
+Team B bids ₹11 lakh
+Team C bids ₹12 lakh
+<span class="com"># at nearly the same time.</span>
+          </div>
+          <p>Your backend—not React—must decide which bid is valid. Similarly:</p>
+          <div class="flow">
+Current Purse = ₹50 lakh
+
+Two simultaneous requests
+        <span class="arrow">↓</span>
+Both try spending ₹30 lakh
+          </div>
+          <p>You cannot allow both to succeed if that violates the purse.</p>
+          <div class="callout" style="margin: 16px 0; border-left-color: var(--gold); background: linear-gradient(90deg, rgba(251,191,36,0.15), transparent);">
+            <p><em>The Rule —</em> <strong>Frontend displays the state. Backend is the source of truth. Database protects persistent data.</strong></p>
+          </div>
+          <p>This should be one of your core architectural principles.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- DEFINITION OF DONE -->
+    <section id="dod">
+      <div class="section-num reveal">Section 31 — 32</div>
+      <h2 class="section-title reveal">Definition of <em>Done</em> & Sync.</h2>
+
+      <!-- Rule 31 -->
+      <div class="rule reveal">
+        <div class="rule-header">
+          <div class="rule-num">31</div>
+          <div class="rule-title">Definition of Done</div>
+        </div>
+        <div class="rule-body">
+          <p>A feature is not done when "It works on my laptop." A Jira story is done when:</p>
+          <div class="code-block good">
+✓ Implementation complete
+✓ Naming conventions followed
+✓ Validation implemented
+✓ Error handling implemented
+✓ Logging added where needed
+✓ Unit tests written
+✓ Integration tests written where applicable
+✓ Tests passing
+✓ API documented
+✓ No secrets committed
+✓ PR created
+✓ Another member reviewed PR
+✓ Merged into develop
+          </div>
+        </div>
+      </div>
+
+      <!-- Rule 32 -->
+      <div class="rule reveal">
+        <div class="rule-header">
+          <div class="rule-num">32</div>
+          <div class="rule-title">Daily Sync Rule</div>
+        </div>
+        <div class="rule-body">
+          <p>Every morning, 10–15 minutes. Each person says:</p>
+          <div class="code-block">
+1. What I completed yesterday.
+2. What I'm working on today.
+3. What is blocking me.
+          </div>
+          <p>Every evening:</p>
+          <div class="flow">
+PR Review <span class="arrow">+</span> Integration Check <span class="arrow">+</span> <span class="key">15-min Knowledge Transfer</span>
+          </div>
+          <p>The knowledge-transfer part is important for your team because <strong>everyone wants to understand the entire project</strong>.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10 COMMANDMENTS -->
+    <section id="commandments">
+      <div class="section-num reveal">The Final Word</div>
+      <h2 class="section-title reveal">AuctXI Development <em>10 Commandments</em>.</h2>
+      <p class="section-lede reveal">If you want a short version that all four of you can keep pinned to your monitors, memorize these.</p>
+      
+      <div class="commandments-grid">
+        <div class="commandment reveal">
+          <div class="com-num">01</div>
+          <div class="com-text">Never push directly to <code style="font-family:var(--mono);color:var(--gold)">main</code> or <code style="font-family:var(--mono);color:var(--gold)">develop</code>.</div>
+        </div>
+        <div class="commandment reveal">
+          <div class="com-num">02</div>
+          <div class="com-text">Every code change must be associated with a Jira ticket and branch.</div>
+        </div>
+        <div class="commandment reveal">
+          <div class="com-num">03</div>
+          <div class="com-text">Every feature goes through a Pull Request and cross-review.</div>
+        </div>
+        <div class="commandment reveal">
+          <div class="com-num">04</div>
+          <div class="com-text">Follow consistent naming and folder conventions.</div>
+        </div>
+        <div class="commandment reveal">
+          <div class="com-num">05</div>
+          <div class="com-text">Controller handles HTTP; Service handles business logic; Repository handles data.</div>
+        </div>
+        <div class="commandment reveal">
+          <div class="com-num">06</div>
+          <div class="com-text">Never trust frontend validation—validate again on the backend.</div>
+        </div>
+        <div class="commandment reveal">
+          <div class="com-num">07</div>
+          <div class="com-text">Never commit passwords, API keys, JWT secrets, or <code style="font-family:var(--mono);color:var(--gold)">.env</code> files.</div>
+        </div>
+        <div class="commandment reveal">
+          <div class="com-num">08</div>
+          <div class="com-text">Every important business rule must have tests.</div>
+        </div>
+        <div class="commandment reveal">
+          <div class="com-num">09</div>
+          <div class="com-text">Critical bugs should get regression tests.</div>
+        </div>
+        <div class="commandment reveal">
+          <div class="com-num">10</div>
+          <div class="com-text">If you write it, someone else reviews it; if someone else writes it, learn how it works.</div>
+        </div>
+      </div>
+
+      <div class="callout reveal" style="margin-top: 48px;">
+        <p><em>Implementation —</em> Put this entire convention document in the GitHub repository as <code>CONTRIBUTING.md</code>. Then create a shorter PR checklist in <code>.github/pull_request_template.md</code>. That way these aren't just rules discussed once—they become part of the actual development workflow.</p>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+      <div>
+        <div class="footer-brand">Auct<em>XI</em></div>
+        <p style="margin-top:8px;color:var(--fg-muted);font-size:13px">Cricket auction platform · Built in 9 days by 4 engineers</p>
+      </div>
+      <div class="footer-meta">
+        <div>Vijay · Akram · Rahil · Prajwal</div>
+        <div style="margin-top:6px">Convention v1.0 · 2025</div>
+      </div>
+    </footer>
+
+  </main>
+</div>
+
+<script>
+  // HERO CANVAS (Subtle ambient dots representing consistent structure)
+  (function(){
+    const c = document.getElementById('heroCanvas');
+    if(!c) return;
+    const ctx = c.getContext('2d');
+    let w,h,dots=[];
+    const DOT_SIZE = 40;
+    function resize(){
+      w = c.width = c.offsetWidth * devicePixelRatio;
+      h = c.height = c.offsetHeight * devicePixelRatio;
+      ctx.scale(devicePixelRatio,devicePixelRatio);
+      buildDots();
+    }
+    function buildDots(){
+      dots = [];
+      const cw = c.offsetWidth, ch = c.offsetHeight;
+      const cols = Math.ceil(cw/DOT_SIZE)+1;
+      const rows = Math.ceil(ch/DOT_SIZE)+1;
+      for(let i=0;i<cols;i++){
+        for(let j=0;j<rows;j++){
+          dots.push({
+            x: i*DOT_SIZE,
+            y: j*DOT_SIZE,
+            base: 0.02 + Math.random()*0.04,
+            phase: Math.random()*Math.PI*2,
+            speed: 0.4 + Math.random()*0.8
+          });
+        }
+      }
+    }
+    let t = 0;
+    function draw(){
+      ctx.clearRect(0,0,c.offsetWidth,c.offsetHeight);
+      t += 0.008;
+      dots.forEach(d=>{
+        const pulse = Math.sin(t*d.speed + d.phase);
+        const alpha = Math.max(0, d.base + pulse*0.06);
+        const size = 1 + Math.max(0,pulse)*1.2;
+        ctx.fillStyle = `rgba(251,191,36,${alpha})`;
+        ctx.beginPath();
+        ctx.arc(d.x, d.y, size, 0, Math.PI*2);
+        ctx.fill();
+      });
+      requestAnimationFrame(draw);
+    }
+    resize();
+    window.addEventListener('resize', resize);
+    draw();
+  })();
+
+  // REVEAL ON SCROLL
+  const reveals = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        e.target.classList.add('in');
+        io.unobserve(e.target);
+      }
+    });
+  },{threshold:0.12, rootMargin:'0px 0px -40px 0px'});
+  reveals.forEach(r=>io.observe(r));
+
+  // ACTIVE NAV + PROGRESS
+  const links = document.querySelectorAll('.nav-link');
+  const sections = document.querySelectorAll('section, .hero');
+  const fill = document.getElementById('progressFill');
+  const pct = document.getElementById('progressPct');
+
+  function update(){
+    let current = '';
+    sections.forEach(s=>{
+      const top = s.getBoundingClientRect().top;
+      if(top < 120) current = s.id;
+    });
+    links.forEach(l=>{
+      l.classList.toggle('active', l.getAttribute('href') === '#'+current);
+    });
+    const docH = document.documentElement.scrollHeight - window.innerHeight;
+    const p = Math.min(100, Math.max(0, (window.scrollY / docH) * 100));
+    fill.style.width = p + '%';
+    pct.textContent = Math.round(p) + '%';
+  }
+  window.addEventListener('scroll', update, {passive:true});
+  update();
+
+  // CLOSE MOBILE NAV ON CLICK
+  document.querySelectorAll('.nav-link').forEach(l=>{
+    l.addEventListener('click', ()=>{
+      document.querySelector('.sidenav').classList.remove('open');
+    });
+  });
+</script>
+
+</body>
+</html>

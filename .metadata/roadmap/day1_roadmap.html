@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AuctXI — Day 1 Execution Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#0a0a0c;
+    --bg-2:#101013;
+    --surface:#15151a;
+    --surface-2:#1c1c22;
+    --border:rgba(255,255,255,0.08);
+    --border-strong:rgba(255,255,255,0.16);
+    --fg:#f4f4f5;
+    --fg-dim:#a1a1aa;
+    --fg-muted:#6b6b75;
+    --gold:#fbbf24;
+    --gold-soft:#f59e0b;
+    --red:#ef4444;
+    --cyan:#22d3ee;
+    --green:#34d399;
+    --vijay:#fbbf24;
+    --akram:#22d3ee;
+    --rahil:#fb7185;
+    --prajwal:#34d399;
+    --serif:'Instrument Serif', serif;
+    --sans:'Space Grotesk', sans-serif;
+    --mono:'JetBrains Mono', monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg);
+    color:var(--fg);
+    font-family:var(--sans);
+    font-size:15px;
+    line-height:1.6;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  body::before{
+    content:"";
+    position:fixed;inset:0;
+    pointer-events:none;
+    z-index:1;
+    opacity:0.035;
+    background-image:url("data:image/svg+xml;utf8,<svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+  .shell{display:grid;grid-template-columns:240px 1fr;max-width:1440px;margin:0 auto;position:relative;z-index:2}
+  
+  /* SIDENAV */
+  .sidenav{
+    position:sticky;top:0;height:100vh;
+    padding:32px 24px;
+    border-right:1px solid var(--border);
+    display:flex;flex-direction:column;
+    background:linear-gradient(180deg,rgba(15,15,18,0.6),rgba(10,10,12,0.95));
+    backdrop-filter:blur(8px);
+    overflow-y:auto;
+  }
+  .sidenav::-webkit-scrollbar{width:4px}
+  .sidenav::-webkit-scrollbar-thumb{background:var(--border)}
+  
+  .brand{display:flex;align-items:center;gap:10px;margin-bottom:36px;text-decoration:none}
+  .brand-mark{
+    width:36px;height:36px;border-radius:8px;
+    background:linear-gradient(135deg,var(--gold),#b45309);
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--serif);font-style:italic;font-size:22px;color:#0a0a0c;
+    box-shadow:0 4px 20px rgba(251,191,36,0.25);
+  }
+  .brand-name{font-family:var(--serif);font-size:24px;letter-spacing:-0.02em;color:var(--fg)}
+  .brand-sub{font-size:10px;color:var(--fg-muted);letter-spacing:0.2em;text-transform:uppercase;margin-top:2px}
+  
+  .nav-section{font-size:10px;letter-spacing:0.2em;color:var(--fg-muted);text-transform:uppercase;margin:24px 0 10px;padding-left:12px}
+  .nav-link{
+    display:block;padding:7px 12px;border-radius:6px;
+    color:var(--fg-dim);text-decoration:none;font-size:12.5px;
+    transition:all 0.2s;border-left:2px solid transparent;
+    margin-left:-2px;
+  }
+  .nav-link:hover{color:var(--fg);background:rgba(255,255,255,0.03)}
+  .nav-link.active{color:var(--gold);border-left-color:var(--gold);background:rgba(251,191,36,0.06)}
+  .nav-link .num{font-family:var(--mono);font-size:10px;color:var(--fg-muted);margin-right:8px}
+  .nav-link.active .num{color:var(--gold)}
+  
+  .progress-rail{
+    margin-top:auto;
+    padding-top:24px;border-top:1px solid var(--border);
+  }
+  .progress-track{height:3px;background:var(--surface-2);border-radius:2px;overflow:hidden}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--gold),#f59e0b);width:0%;transition:width 0.1s}
+  .progress-label{font-size:10px;color:var(--fg-muted);letter-spacing:0.15em;text-transform:uppercase;margin-top:8px;display:flex;justify-content:space-between}
+  
+  /* MAIN */
+  main{padding:0 64px 120px;max-width:1100px}
+  
+  /* HERO */
+  .hero{
+    min-height:100vh;
+    display:flex;flex-direction:column;justify-content:center;
+    position:relative;padding:80px 0 60px;
+  }
+  .hero-canvas{position:absolute;inset:0;z-index:0;opacity:0.4}
+  .hero-content{position:relative;z-index:2}
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:10px;
+    padding:6px 14px;border:1px solid var(--border-strong);
+    border-radius:999px;font-size:11px;letter-spacing:0.25em;
+    text-transform:uppercase;color:var(--fg-dim);
+    background:rgba(255,255,255,0.02);margin-bottom:32px;
+  }
+  .eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--gold);box-shadow:0 0 12px var(--gold);animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+  
+  h1.hero-title{
+    font-family:var(--serif);
+    font-size:clamp(56px,9vw,128px);
+    line-height:0.95;letter-spacing:-0.03em;
+    font-weight:400;margin-bottom:28px;
+  }
+  .hero-title em{color:var(--gold);font-style:italic}
+  .hero-lede{
+    font-size:20px;color:var(--fg-dim);max-width:680px;
+    line-height:1.55;margin-bottom:48px;
+  }
+  .hero-stats{display:flex;gap:48px;flex-wrap:wrap;margin-bottom:48px}
+  .stat-block .stat-num{font-family:var(--serif);font-size:42px;line-height:1;color:var(--fg)}
+  .stat-block .stat-num em{color:var(--gold);font-style:italic}
+  .stat-block .stat-label{font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--fg-muted);margin-top:6px}
+  
+  /* TIMELINE & SECTIONS */
+  section{padding:60px 0;border-top:1px solid var(--border);scroll-margin-top:40px}
+  .section-num{
+    font-family:var(--mono);font-size:11px;letter-spacing:0.3em;
+    color:var(--gold);text-transform:uppercase;margin-bottom:16px;
+    display:flex;align-items:center;gap:12px;
+  }
+  .section-num::before{content:"";width:24px;height:1px;background:var(--gold)}
+  h2.section-title{
+    font-family:var(--serif);font-size:clamp(36px,5vw,56px);
+    line-height:1.05;letter-spacing:-0.02em;font-weight:400;
+    margin-bottom:20px;
+  }
+  h2.section-title em{color:var(--gold);font-style:italic}
+  .section-lede{font-size:17px;color:var(--fg-dim);max-width:680px;margin-bottom:48px;line-height:1.6}
+  
+  .timeline-block{
+    position:relative;
+    padding-left:32px;
+    margin-bottom:48px;
+    border-left:2px solid var(--border);
+  }
+  .timeline-block::before{
+    content:"";
+    position:absolute;
+    left:-7px;top:0;
+    width:12px;height:12px;
+    border-radius:50%;
+    background:var(--bg);
+    border:2px solid var(--gold);
+  }
+  .time-stamp{
+    font-family:var(--mono);font-size:12px;
+    color:var(--gold);letter-spacing:0.1em;
+    margin-bottom:8px;
+  }
+  .timeline-title{
+    font-family:var(--sans);font-size:22px;font-weight:600;
+    color:var(--fg);margin-bottom:16px;letter-spacing:-0.01em;
+  }
+  
+  .callout {
+    border-left:3px solid var(--gold);
+    background:linear-gradient(90deg,rgba(251,191,36,0.08),transparent);
+    padding:18px 24px;margin:24px 0;border-radius:0 8px 8px 0;
+  }
+  .callout p{margin:0;color:var(--fg);font-size:15px}
+  .callout em{color:var(--gold);font-family:var(--serif);font-style:italic;font-size:18px;margin-right:6px}
+  
+  .code-block{
+    background:#08080a;border:1px solid var(--border);
+    border-radius:8px;padding:20px 24px;
+    font-family:var(--mono);font-size:12.5px;line-height:1.7;
+    overflow-x:auto;margin:16px 0;position:relative;
+  }
+  .code-block::before{
+    content:attr(data-lang);
+    position:absolute;top:10px;right:16px;
+    font-size:9px;color:var(--fg-muted);letter-spacing:0.15em;
+    text-transform:uppercase;
+  }
+  .code-block .kw{color:#fbbf24}
+  .code-block .str{color:#34d399}
+  .code-block .com{color:#6b6b75;font-style:italic}
+  .code-block .dir{color:#22d3ee}
+  .code-block .indent{padding-left:20px}
+  
+  .flow{
+    background:#08080a;border:1px solid var(--border);
+    border-radius:8px;padding:18px 22px;margin:16px 0;
+    font-family:var(--mono);font-size:12px;line-height:1.9;
+    color:var(--fg-dim);white-space:pre;overflow-x:auto;
+  }
+  .flow .arrow{color:var(--gold)}
+  .flow .key{color:var(--fg)}
+  
+  /* MEMBER ASSIGNMENTS */
+  .assignments{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin:24px 0}
+  .assignment{
+    background:var(--surface);border:1px solid var(--border);
+    border-radius:10px;padding:20px;
+    transition:all 0.2s;
+  }
+  .assignment:hover{border-color:var(--border-strong);transform:translateY(-2px)}
+  .assignment .who{margin-bottom:12px}
+  .assignment .task{font-size:14px;color:var(--fg);margin-bottom:12px;font-weight:500}
+  .assignment ul{list-style:none;padding:0;margin:0}
+  .assignment li{
+    font-size:12.5px;color:var(--fg-dim);
+    padding:4px 0 4px 16px;position:relative;
+  }
+  .assignment li::before{content:"›";position:absolute;left:0;color:var(--gold);font-family:var(--mono)}
+  
+  .member{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:4px 10px;border-radius:999px;
+    font-size:11px;font-weight:500;
+    border:1px solid;
+  }
+  .member::before{content:"";width:8px;height:8px;border-radius:50%}
+  .m-vijay{color:var(--vijay);border-color:rgba(251,191,36,0.3);background:rgba(251,191,36,0.08)}
+  .m-vijay::before{background:var(--vijay)}
+  .m-akram{color:var(--akram);border-color:rgba(34,211,238,0.3);background:rgba(34,211,238,0.08)}
+  .m-akram::before{background:var(--akram)}
+  .m-rahil{color:var(--rahil);border-color:rgba(251,113,133,0.3);background:rgba(251,113,133,0.08)}
+  .m-rahil::before{background:var(--rahil)}
+  .m-prajwal{color:var(--prajwal);border-color:rgba(52,211,153,0.3);background:rgba(52,211,153,0.08)}
+  .m-prajwal::before{background:var(--prajwal)}
+  
+  /* DOD CHECKLIST */
+  .dod-grid{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+    gap:12px;margin:24px 0;
+  }
+  .dod-item{
+    display:flex;align-items:center;gap:14px;
+    padding:14px 18px;background:var(--surface);
+    border:1px solid var(--border);border-radius:10px;
+    transition:all 0.2s;
+  }
+  .dod-item:hover{border-color:var(--gold)}
+  .dod-check{
+    width:20px;height:20px;border-radius:6px;
+    border:1.5px solid var(--gold);flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    color:var(--gold);font-size:12px;
+  }
+  .dod-item span{font-size:13px;color:var(--fg)}
+  
+  h3.sub-title{
+    font-family:var(--sans);font-size:13px;font-weight:600;
+    letter-spacing:0.12em;text-transform:uppercase;
+    color:var(--fg);margin:32px 0 16px;
+    display:flex;align-items:center;gap:10px;
+  }
+  h3.sub-title::before{content:"";width:6px;height:6px;background:var(--gold);border-radius:1px;transform:rotate(45deg)}
+  
+  /* FOOTER */
+  footer{
+    border-top:1px solid var(--border);
+    padding:60px 0 40px;margin-top:80px;
+    display:flex;justify-content:space-between;align-items:end;
+    flex-wrap:wrap;gap:24px;
+  }
+  .footer-brand{font-family:var(--serif);font-size:32px;color:var(--fg)}
+  .footer-brand em{color:var(--gold);font-style:italic}
+  .footer-meta{font-size:11px;color:var(--fg-muted);letter-spacing:0.15em;text-transform:uppercase;text-align:right}
+  
+  /* REVEAL ANIMATIONS */
+  .reveal{opacity:0;transform:translateY(24px);transition:opacity 0.8s ease,transform 0.8s ease}
+  .reveal.in{opacity:1;transform:translateY(0)}
+  
+  /* MOBILE */
+  @media (max-width:1024px){
+    .shell{grid-template-columns:1fr}
+    .sidenav{position:fixed;top:0;left:-260px;width:260px;z-index:100;transition:left 0.3s}
+    .sidenav.open{left:0}
+    main{padding:0 32px 80px}
+    .menu-toggle{display:flex !important}
+  }
+  .menu-toggle{
+    display:none;position:fixed;top:20px;right:20px;z-index:101;
+    width:44px;height:44px;border-radius:8px;
+    background:var(--surface);border:1px solid var(--border-strong);
+    align-items:center;justify-content:center;cursor:pointer;
+  }
+  .menu-toggle span{width:18px;height:1.5px;background:var(--fg);position:relative}
+  .menu-toggle span::before,.menu-toggle span::after{
+    content:"";position:absolute;left:0;width:18px;height:1.5px;background:var(--fg);
+  }
+  .menu-toggle span::before{top:-6px}
+  .menu-toggle span::after{top:6px}
+</style>
+</head>
+<body>
+
+<button class="menu-toggle" onclick="document.querySelector('.sidenav').classList.toggle('open')"><span></span></button>
+
+<div class="shell">
+
+  <!-- SIDENAV -->
+  <aside class="sidenav">
+    <a href="#top" class="brand">
+      <div class="brand-mark">A</div>
+      <div>
+        <div class="brand-name">AuctXI</div>
+        <div class="brand-sub">Day 1 Plan</div>
+      </div>
+    </a>
+
+    <div class="nav-section">Morning</div>
+    <a class="nav-link" href="#kickoff"><span class="num">09:00</span>Kickoff & Arch</a>
+    <a class="nav-link" href="#jira"><span class="num">09:30</span>Jira Setup</a>
+    <a class="nav-link" href="#github"><span class="num">10:15</span>GitHub Setup</a>
+    <a class="nav-link" href="#git-flow"><span class="num">11:00</span>Git Practice</a>
+    
+    <div class="nav-section">Midday</div>
+    <a class="nav-link" href="#setup"><span class="num">11:30</span>Parallel Setup</a>
+    <a class="nav-link" href="#lunch"><span class="num">01:30</span>Lunch Break</a>
+    
+    <div class="nav-section">Afternoon</div>
+    <a class="nav-link" href="#kt"><span class="num">02:15</span>Cross KT</a>
+    <a class="nav-link" href="#env"><span class="num">03:00</span>Local Env</a>
+    <a class="nav-link" href="#integ"><span class="num">04:00</span>Integration</a>
+    <a class="nav-link" href="#tests"><span class="num">05:00</span>Testing Setup</a>
+    
+    <div class="nav-section">Evening</div>
+    <a class="nav-link" href="#prs"><span class="num">05:30</span>Pull Requests</a>
+    <a class="nav-link" href="#final"><span class="num">06:00</span>Final Merge</a>
+    <a class="nav-link" href="#dod"><span class="num">06:30</span>DoD & KT</a>
+
+    <div class="progress-rail">
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-label"><span>Reading</span><span id="progressPct">0%</span></div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main id="top">
+
+    <!-- HERO -->
+    <div class="hero">
+      <canvas class="hero-canvas" id="heroCanvas"></canvas>
+      <div class="hero-content">
+        <div class="eyebrow"><span class="dot"></span>Execution Blueprint · 09:00 to 19:00</div>
+        <h1 class="hero-title">Day 1. <em>The Baseline.</em></h1>
+        <p class="hero-lede">No authentication today. Today is about making the machine purr—project management, repositories, local environments, and the first successful API call across the stack. If Day 1 ends clean, Day 2 starts clean.</p>
+        <div class="hero-stats">
+          <div class="stat-block">
+            <div class="stat-num"><em>04</em></div>
+            <div class="stat-label"> Repositories</div>
+          </div>
+          <div class="stat-block">
+            <div class="stat-num"><em>10</em></div>
+            <div class="stat-label">Hour Workday</div>
+          </div>
+          <div class="stat-block">
+            <div class="stat-num"><em>01</em></div>
+            <div class="stat-label">Health Endpoint</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KICKOFF -->
+    <section id="kickoff">
+      <div class="timeline-block reveal">
+        <div class="time-stamp">09:00 — 09:30 AM</div>
+        <div class="timeline-title">Team Kickoff & Architecture Lock</div>
+        <p>All four sit together. Before touching code, agree on the final architecture. Everyone must agree: <em>We will not add unnecessary microservices or architecture layers unless the project genuinely requires them.</em></p>
+        
+        <div class="flow" style="margin-top: 24px;">
+                    <span class="key">React</span>
+                      │
+                  REST APIs
+                      │
+                      ▼
+                <span class="key">Spring Boot</span>
+                      │
+                     <span class="key">MySQL</span>
+                      │
+            ┌─────────┴─────────┐
+            │                   │
+      <span class="str">Payment Service</span>    <span class="str">Notification Service</span>
+          (.NET)               (.NET)
+            │
+         <span class="dir">Razorpay</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- JIRA -->
+    <section id="jira">
+      <div class="timeline-block reveal">
+        <div class="time-stamp">09:30 — 10:15 AM</div>
+        <div class="timeline-title">Create Jira Project</div>
+        <p>Primary: <span class="member m-vijay">Vijay</span> Participants: Everyone</p>
+        <p>Create project <code style="color:var(--gold)">AuctXI</code> (Key: <code style="color:var(--gold)">AUX</code>). Create the core Epics: Authentication, User Mgmt, Player Mgmt, Team Mgmt, Auction Mgmt, Bidding, Payment, Notification, Reports, Testing, DevOps.</p>
+        <p>Create Day 1 tickets and assign them immediately:</p>
+        
+        <div class="assignments" style="margin-top: 16px;">
+          <div class="assignment">
+            <div class="who"><span class="member m-vijay">Vijay</span></div>
+            <div class="task">AUX-1 & AUX-3</div>
+            <ul><li>Setup GitHub repos</li><li>Initialize Spring Boot</li></ul>
+          </div>
+          <div class="assignment">
+            <div class="who"><span class="member m-akram">Akram</span></div>
+            <div class="task">AUX-2</div>
+            <ul><li>Initialize React frontend</li></ul>
+          </div>
+          <div class="assignment">
+            <div class="who"><span class="member m-rahil">Rahil</span></div>
+            <div class="task">AUX-4</div>
+            <ul><li>Configure MySQL database</li></ul>
+          </div>
+          <div class="assignment">
+            <div class="who"><span class="member m-prajwal">Prajwal</span></div>
+            <div class="task">AUX-5</div>
+            <ul><li>Initialize .NET services</li></ul>
+          </div>
+        </div>
+
+        <h3 class="sub-title">Jira Workflow</h3>
+        <div class="code-block">
+TO DO <span class="kw">↓</span> IN PROGRESS <span class="kw">↓</span> CODE REVIEW <span class="kw">↓</span> TESTING <span class="kw">↓</span> <span class="str">DONE</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- GITHUB -->
+    <section id="github">
+      <div class="timeline-block reveal">
+        <div class="time-stamp">10:15 — 11:00 AM</div>
+        <div class="timeline-title">GitHub Setup</div>
+        <p>Primary: <span class="member m-vijay">Vijay</span></p>
+        <p>Create GitHub Organization <code style="color:var(--gold)">AuctXI</code>. Invite all four members. Create four repositories:</p>
+        <div class="assignments">
+          <div class="assignment"><div class="task">auctxi-frontend</div><ul><li>React Application</li></ul></div>
+          <div class="assignment"><div class="task">auctxi-backend</div><ul><li>Spring Boot App</li></ul></div>
+          <div class="assignment"><div class="task">auctxi-services</div><ul><li>payment-service/</li><li>notification-service/</li></ul></div>
+          <div class="assignment"><div class="task">auctxi-infra</div><ul><li>docker/</li><li>jenkins/</li></ul></div>
+        </div>
+        <div class="callout">
+          <p><em>Rule —</em> Create <code>main</code> and <code>develop</code> branches. Protect both. Nobody directly pushes to <code>main</code> or <code>develop</code>.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- GIT PRACTICE -->
+    <section id="git-flow">
+      <div class="timeline-block reveal">
+        <div class="time-stamp">11:00 — 11:30 AM</div>
+        <div class="timeline-title">Git Workflow Practice</div>
+        <p>Everyone practices the PR workflow on their assigned repository. This ensures nobody reaches Day 3 asking how to create a PR.</p>
+        <div class="code-block" data-lang="Workflow">
+<span class="kw">develop</span>
+   <span class="kw">↓</span>
+feature branch <span class="com">(e.g., chore/AUX-3-backend-setup)</span>
+   <span class="kw">↓</span>
+change
+   <span class="kw">↓</span>
+commit <span class="com">(e.g., chore: initialize Spring Boot project)</span>
+   <span class="kw">↓</span>
+push
+   <span class="kw">↓</span>
+PR <span class="com">(Title: [AUX-3] Initialize Spring Boot Backend)</span>
+   <span class="kw">↓</span>
+review
+   <span class="kw">↓</span>
+merge
+        </div>
+      </div>
+    </section>
+
+    <!-- PARALLEL SETUP -->
+    <section id="setup">
+      <div class="timeline-block reveal">
+        <div class="time-stamp">11:30 AM — 1:30 PM</div>
+        <div class="timeline-title">Parallel Project Setup</div>
+        <p>Now divide temporarily. The responsibility is only for initial setup. The person responsible creates the setup and then teaches the other three.</p>
+        
+        <div class="assignments">
+          <!-- Vijay -->
+          <div class="assignment">
+            <div class="who"><span class="member m-vijay">Vijay</span></div>
+            <div class="task">Spring Boot Backend</div>
+            <ul>
+              <li>Branch: chore/AUX-3-backend-setup</li>
+              <li>Init Spring Boot (Web, JPA, MySQL, Validation, Security, Test)</li>
+              <li>Folder structure (config, controller, dto, entity, etc.)</li>
+              <li>GET /api/health returns "AuctXI Backend Running"</li>
+            </ul>
+          </div>
+          <!-- Akram -->
+          <div class="assignment">
+            <div class="who"><span class="member m-akram">Akram</span></div>
+            <div class="task">React Frontend</div>
+            <ul>
+              <li>Branch: chore/AUX-2-frontend-setup</li>
+              <li>Init Vite + React + React Router + Axios</li>
+              <li>Folder structure (components, pages, services, etc.)</li>
+              <li>API service using VITE_API_BASE_URL</li>
+              <li>Commit .env.example, NOT .env</li>
+            </ul>
+          </div>
+          <!-- Rahil -->
+          <div class="assignment">
+            <div class="who"><span class="member m-rahil">Rahil</span></div>
+            <div class="task">MySQL Database</div>
+            <ul>
+              <li>Branch: chore/AUX-4-database-setup</li>
+              <li>Install/Run MySQL, create auctxi_db</li>
+              <li>Configure Spring Boot connectivity (env vars)</li>
+              <li>No real passwords committed</li>
+              <li>Verify Spring Boot connection logs</li>
+            </ul>
+          </div>
+          <!-- Prajwal -->
+          <div class="assignment">
+            <div class="who"><span class="member m-prajwal">Prajwal</span></div>
+            <div class="task">.NET Skeletons</div>
+            <ul>
+              <li>Branch: chore/AUX-5-services-setup</li>
+              <li>Create payment-service & notification-service</li>
+              <li>NO Razorpay/Email logic today</li>
+              <li>GET /api/health on both services</li>
+              <li>Verify Swagger works</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LUNCH -->
+    <section id="lunch">
+      <div class="timeline-block reveal">
+        <div class="time-stamp">01:30 — 02:15 PM</div>
+        <div class="timeline-title">Lunch</div>
+        <div class="callout">
+          <p><em>Rule —</em> No coding. Seriously. Step away from the IDE.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CROSS KT -->
+    <section id="kt">
+      <div class="timeline-block reveal">
+        <div class="time-stamp">02:15 — 03:00 PM</div>
+        <div class="timeline-title">Cross Knowledge Transfer #1</div>
+        <p>Everyone stops working individually. Each person gets ~10 minutes to explain their setup. The other three clone/pull the repositories and run them.</p>
+        
+        <div class="assignments">
+          <div class="assignment"><div class="who"><span class="member m-vijay">Vijay</span></div><div class="task">Explains Spring Boot</div><ul><li>Controller, Service, Repository</li><li>Application startup</li></ul></div>
+          <div class="assignment"><div class="who"><span class="member m-akram">Akram</span></div><div class="task">Explains React</div><ul><li>Components, Pages, Routing</li><li>Axios configuration</li></ul></div>
+          <div class="assignment"><div class="who"><span class="member m-rahil">Rahil</span></div><div class="task">Explains MySQL</div><ul><li>Database connection</li><li>JPA relationship with MySQL</li></ul></div>
+          <div class="assignment"><div class="who"><span class="member m-prajwal">Prajwal</span></div><div class="task">Explains .NET API</div><ul><li>Controllers, Swagger</li><li>Microservice skeleton</li></ul></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LOCAL ENV -->
+    <section id="env">
+      <div class="timeline-block reveal">
+        <div class="time-stamp">03:00 — 04:00 PM</div>
+        <div class="timeline-title">Full Local Environment Setup</div>
+        <p>Every member must have Node.js, JDK 21, Maven, .NET SDK, MySQL, Git, Docker, and Postman installed.</p>
+        <p>Every member must run the entire stack simultaneously:</p>
+        
+        <div class="flow">
+<span class="com">Terminal 1:</span> React
+<span class="com">Terminal 2:</span> Spring Boot
+<span class="com">Terminal 3:</span> Payment Service
+<span class="com">Terminal 4:</span> Notification Service
+<span class="com">Background:</span> MySQL
+        </div>
+        <p>Everyone verifies all components independently.</p>
+      </div>
+    </section>
+
+    <!-- INTEGRATION -->
+    <section id="integ">
+      <div class="timeline-block reveal">
+        <div class="time-stamp">04:00 — 05:00 PM</div>
+        <div class="timeline-title">First Integration</div>
+        <p>Integrate React with Spring Boot. Configure CORS correctly on the backend. <strong>Do not disable security globally as a permanent shortcut.</strong></p>
+        
+        <div class="flow">
+<span class="key">React</span> <span class="arrow">↓</span> GET /api/health
+<span class="arrow">↓</span> <span class="key">Spring Boot</span> <span class="arrow">↓</span> Response
+<span class="arrow">↓</span> <span class="key">React displays status</span>
+        </div>
+        <p>React should display: <code style="color:var(--gold)">Backend Status: AuctXI Backend Running</code></p>
+      </div>
+    </section>
+
+    <!-- TESTING -->
+    <section id="tests">
+      <div class="timeline-block reveal">
+        <div class="time-stamp">05:00 — 05:30 PM</div>
+        <div class="timeline-title">Testing Infrastructure Setup</div>
+        <p>The goal today is <strong>not test coverage</strong>. The goal is to verify the testing infrastructure works before feature development starts.</p>
+        
+        <div class="assignments">
+          <div class="assignment"><div class="who"><span class="member m-vijay">Vijay</span></div><div class="task">Spring Boot</div><ul><li>JUnit + Mockito</li><li>Spring Boot Test</li><li>Run basic context test</li></ul></div>
+          <div class="assignment"><div class="who"><span class="member m-akram">Akram</span></div><div class="task">React</div><ul><li>Vitest + RTL</li><li>One simple render test</li></ul></div>
+          <div class="assignment"><div class="who"><span class="member m-prajwal">Prajwal</span></div><div class="task">.NET Services</div><ul><li>xUnit setup</li><li>One basic test per service</li></ul></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRS -->
+    <section id="prs">
+      <div class="timeline-block reveal">
+        <div class="time-stamp">05:30 — 06:00 PM</div>
+        <div class="timeline-title">Pull Requests & Cross Review</div>
+        <p>Create PRs and assign reviewers. Reviewer checks: project runs, folder structure follows convention, no passwords committed, no unnecessary dependencies, README added, basic tests pass.</p>
+        
+        <div class="assignments">
+          <div class="assignment"><div class="who"><span class="member m-vijay">Vijay</span></div><div class="task">PR: [AUX-3] Backend</div><ul><li>Reviewer: Prajwal</li></ul></div>
+          <div class="assignment"><div class="who"><span class="member m-akram">Akram</span></div><div class="task">PR: [AUX-2] Frontend</div><ul><li>Reviewer: Rahil</li></ul></div>
+          <div class="assignment"><div class="who"><span class="member m-rahil">Rahil</span></div><div class="task">PR: [AUX-4] Database</div><ul><li>Reviewer: Vijay</li></ul></div>
+          <div class="assignment"><div class="who"><span class="member m-prajwal">Prajwal</span></div><div class="task">PR: [AUX-5] Services</div><ul><li>Reviewer: Akram</li></ul></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FINAL MERGE -->
+    <section id="final">
+      <div class="timeline-block reveal">
+        <div class="time-stamp">06:00 — 06:30 PM</div>
+        <div class="timeline-title">Final Integration Merge</div>
+        <p>After reviews, merge all PRs into <code style="color:var(--gold)">develop</code>.</p>
+        <p>Everyone runs:</p>
+        <div class="code-block">
+<span class="kw">git checkout develop</span>
+<span class="kw">git pull origin develop</span>
+        </div>
+        <p>Run everything again. Verify React, Spring Boot, MySQL, Payment Service, Notification Service, and Tests all pass.</p>
+      </div>
+    </section>
+
+    <!-- DOD -->
+    <section id="dod">
+      <div class="timeline-block reveal" style="border-left-color: var(--gold);">
+        <div class="time-stamp">06:30 — 07:00 PM</div>
+        <div class="timeline-title">Day 1 Definition of Done & KT</div>
+        <p>Randomly ask questions. Ask Vijay how React calls Spring Boot. Ask Akram how Spring Boot connects to MySQL. Ask Rahil the purpose of the Payment service. Ask Prajwal to explain Git branching.</p>
+        <p>Move completed Jira tickets to DONE. Do <strong>not</strong> move to Day 2 until the baseline is stable:</p>
+        
+        <div class="dod-grid">
+          <div class="dod-item"><div class="dod-check">✓</div><span>All four have GitHub access</span></div>
+          <div class="dod-item"><div class="dod-check">✓</div><span>Jira board & Epics created</span></div>
+          <div class="dod-item"><div class="dod-check">✓</div><span>main and develop established</span></div>
+          <div class="dod-item"><div class="dod-check">✓</div><span>Feature-branch workflow understood</span></div>
+          <div class="dod-item"><div class="dod-check">✓</div><span>React runs on all machines</span></div>
+          <div class="dod-item"><div class="dod-check">✓</div><span>Spring Boot runs on all machines</span></div>
+          <div class="dod-item"><div class="dod-check">✓</div><span>MySQL connection works</span></div>
+          <div class="dod-item"><div class="dod-check">✓</div><span>Payment & Notification run</span></div>
+          <div class="dod-item"><div class="dod-check">✓</div><span>React calls Spring Boot health endpoint</span></div>
+          <div class="dod-item"><div class="dod-check">✓</div><span>Basic Spring test runs</span></div>
+          <div class="dod-item"><div class="dod-check">✓</div><span>Basic React test runs</span></div>
+          <div class="dod-item"><div class="dod-check">✓</div><span>Basic .NET tests run</span></div>
+          <div class="dod-item"><div class="dod-check">✓</div><span>No credentials/secrets committed</span></div>
+          <div class="dod-item"><div class="dod-check">✓</div><span>All Day 1 PRs reviewed</span></div>
+          <div class="dod-item"><div class="dod-check">✓</div><span>Stable setup merged into develop</span></div>
+          <div class="dod-item"><div class="dod-check">✓</div><span>Team understands basic architecture</span></div>
+        </div>
+      </div>
+      
+      <div class="callout reveal" style="margin-top: 48px; border-left-color: var(--green); background: linear-gradient(90deg, rgba(52,211,153,0.08), transparent);">
+        <p><em>Next Up —</em> Day 2 starts only after this baseline is stable. Day 2 is your first real feature development day: <strong>Authentication & Authorization</strong>. We will divide work across Vijay, Akram, Rahil, and Prajwal carefully, ensuring JWT, Spring Security, React auth state, role-based authorization, and testing are interconnected without conflicts.</p>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+      <div>
+        <div class="footer-brand">Auct<em>XI</em></div>
+        <p style="margin-top:8px;color:var(--fg-muted);font-size:13px">Cricket auction platform · Built in 9 days by 4 engineers</p>
+      </div>
+      <div class="footer-meta">
+        <div>Vijay · Akram · Rahil · Prajwal</div>
+        <div style="margin-top:6px">Day 1 Execution · 2025</div>
+      </div>
+    </footer>
+
+  </main>
+</div>
+
+<script>
+  // HERO CANVAS - Grid coming online
+  (function(){
+    const c = document.getElementById('heroCanvas');
+    if(!c) return;
+    const ctx = c.getContext('2d');
+    let w,h,dots=[];
+    const DOT_SIZE = 40;
+    function resize(){
+      w = c.width = c.offsetWidth * devicePixelRatio;
+      h = c.height = c.offsetHeight * devicePixelRatio;
+      ctx.scale(devicePixelRatio,devicePixelRatio);
+      buildDots();
+    }
+    function buildDots(){
+      dots = [];
+      const cw = c.offsetWidth, ch = c.offsetHeight;
+      const cols = Math.ceil(cw/DOT_SIZE)+1;
+      const rows = Math.ceil(ch/DOT_SIZE)+1;
+      for(let i=0;i<cols;i++){
+        for(let j=0;j<rows;j++){
+          dots.push({
+            x: i*DOT_SIZE,
+            y: j*DOT_SIZE,
+            base: 0.02 + Math.random()*0.04,
+            phase: Math.random()*Math.PI*2,
+            speed: 0.3 + Math.random()*0.8
+          });
+        }
+      }
+    }
+    let t = 0;
+    function draw(){
+      ctx.clearRect(0,0,c.offsetWidth,c.offsetHeight);
+      t += 0.008;
+      dots.forEach(d=>{
+        const pulse = Math.sin(t*d.speed + d.phase);
+        const alpha = Math.max(0, d.base + pulse*0.06);
+        const size = 1 + Math.max(0,pulse)*1.2;
+        ctx.fillStyle = `rgba(251,191,36,${alpha})`;
+        ctx.beginPath();
+        ctx.arc(d.x, d.y, size, 0, Math.PI*2);
+        ctx.fill();
+        // occasional green "connection" flash
+        if(pulse > 0.95){
+          ctx.fillStyle = `rgba(52,211,153,${(pulse-0.95)*6})`;
+          ctx.beginPath();
+          ctx.arc(d.x, d.y, 4, 0, Math.PI*2);
+          ctx.fill();
+        }
+      });
+      requestAnimationFrame(draw);
+    }
+    resize();
+    window.addEventListener('resize', resize);
+    draw();
+  })();
+
+  // REVEAL ON SCROLL
+  const reveals = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        e.target.classList.add('in');
+        io.unobserve(e.target);
+      }
+    });
+  },{threshold:0.12, rootMargin:'0px 0px -40px 0px'});
+  reveals.forEach(r=>io.observe(r));
+
+  // ACTIVE NAV + PROGRESS
+  const links = document.querySelectorAll('.nav-link');
+  const sections = document.querySelectorAll('section');
+  const fill = document.getElementById('progressFill');
+  const pct = document.getElementById('progressPct');
+
+  function update(){
+    let current = '';
+    sections.forEach(s=>{
+      const top = s.getBoundingClientRect().top;
+      if(top < 120) current = s.id;
+    });
+    links.forEach(l=>{
+      l.classList.toggle('active', l.getAttribute('href') === '#'+current);
+    });
+    const docH = document.documentElement.scrollHeight - window.innerHeight;
+    const p = Math.min(100, Math.max(0, (window.scrollY / docH) * 100));
+    fill.style.width = p + '%';
+    pct.textContent = Math.round(p) + '%';
+  }
+  window.addEventListener('scroll', update, {passive:true});
+  update();
+
+  // CLOSE MOBILE NAV ON CLICK
+  document.querySelectorAll('.nav-link').forEach(l=>{
+    l.addEventListener('click', ()=>{
+      document.querySelector('.sidenav').classList.remove('open');
+    });
+  });
+</script>
+
+</body>
+</html>

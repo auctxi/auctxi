@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AuctXI — Frontend Architecture & Design System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#0a0a0c;
+    --bg-2:#101013;
+    --surface:#15151a;
+    --surface-2:#1c1c22;
+    --border:rgba(255,255,255,0.08);
+    --border-strong:rgba(255,255,255,0.16);
+    --fg:#f4f4f5;
+    --fg-dim:#a1a1aa;
+    --fg-muted:#6b6b75;
+    --gold:#fbbf24;
+    --gold-soft:#f59e0b;
+    --red:#ef4444;
+    --cyan:#22d3ee;
+    --green:#34d399;
+    --blue:#3b82f6;
+    --serif:'Instrument Serif', serif;
+    --sans:'Space Grotesk', sans-serif;
+    --mono:'JetBrains Mono', monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg);
+    color:var(--fg);
+    font-family:var(--sans);
+    font-size:15px;
+    line-height:1.6;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  body::before{
+    content:"";
+    position:fixed;inset:0;
+    pointer-events:none;
+    z-index:1;
+    opacity:0.035;
+    background-image:url("data:image/svg+xml;utf8,<svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+  .shell{display:grid;grid-template-columns:260px 1fr;max-width:1440px;margin:0 auto;position:relative;z-index:2}
+  
+  /* SIDENAV */
+  .sidenav{
+    position:sticky;top:0;height:100vh;
+    padding:32px 24px;
+    border-right:1px solid var(--border);
+    display:flex;flex-direction:column;
+    background:linear-gradient(180deg,rgba(15,15,18,0.6),rgba(10,10,12,0.95));
+    backdrop-filter:blur(8px);
+    overflow-y:auto;
+  }
+  .sidenav::-webkit-scrollbar{width:4px}
+  .sidenav::-webkit-scrollbar-thumb{background:var(--border)}
+  
+  .brand{display:flex;align-items:center;gap:10px;margin-bottom:36px;text-decoration:none}
+  .brand-mark{
+    width:36px;height:36px;border-radius:8px;
+    background:linear-gradient(135deg,var(--gold),#b45309);
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--serif);font-style:italic;font-size:22px;color:#0a0a0c;
+    box-shadow:0 4px 20px rgba(251,191,36,0.25);
+  }
+  .brand-name{font-family:var(--serif);font-size:24px;letter-spacing:-0.02em;color:var(--fg)}
+  .brand-sub{font-size:10px;color:var(--fg-muted);letter-spacing:0.2em;text-transform:uppercase;margin-top:2px}
+  
+  .nav-section{font-size:10px;letter-spacing:0.2em;color:var(--fg-muted);text-transform:uppercase;margin:24px 0 10px;padding-left:12px}
+  .nav-link{
+    display:block;padding:7px 12px;border-radius:6px;
+    color:var(--fg-dim);text-decoration:none;font-size:12.5px;
+    transition:all 0.2s;border-left:2px solid transparent;
+    margin-left:-2px;
+  }
+  .nav-link:hover{color:var(--fg);background:rgba(255,255,255,0.03)}
+  .nav-link.active{color:var(--gold);border-left-color:var(--gold);background:rgba(251,191,36,0.06)}
+  .nav-link .num{font-family:var(--mono);font-size:10px;color:var(--fg-muted);margin-right:8px}
+  .nav-link.active .num{color:var(--gold)}
+  
+  .progress-rail{
+    margin-top:auto;
+    padding-top:24px;border-top:1px solid var(--border);
+  }
+  .progress-track{height:3px;background:var(--surface-2);border-radius:2px;overflow:hidden}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--gold),#f59e0b);width:0%;transition:width 0.1s}
+  .progress-label{font-size:10px;color:var(--fg-muted);letter-spacing:0.15em;text-transform:uppercase;margin-top:8px;display:flex;justify-content:space-between}
+  
+  /* MAIN */
+  main{padding:0 64px 120px;max-width:1100px}
+  
+  /* HERO */
+  .hero{
+    min-height:100vh;
+    display:flex;flex-direction:column;justify-content:center;
+    position:relative;padding:80px 0 60px;
+  }
+  .hero-canvas{position:absolute;inset:0;z-index:0;opacity:0.4}
+  .hero-content{position:relative;z-index:2}
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:10px;
+    padding:6px 14px;border:1px solid var(--border-strong);
+    border-radius:999px;font-size:11px;letter-spacing:0.25em;
+    text-transform:uppercase;color:var(--fg-dim);
+    background:rgba(255,255,255,0.02);margin-bottom:32px;
+  }
+  .eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--gold);box-shadow:0 0 12px var(--gold);animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+  
+  h1.hero-title{
+    font-family:var(--serif);
+    font-size:clamp(56px,8vw,120px);
+    line-height:0.95;letter-spacing:-0.03em;
+    font-weight:400;margin-bottom:28px;
+  }
+  .hero-title em{color:var(--gold);font-style:italic}
+  .hero-lede{
+    font-size:20px;color:var(--fg-dim);max-width:680px;
+    line-height:1.55;margin-bottom:48px;
+  }
+  
+  /* SECTIONS */
+  section{padding:80px 0;border-top:1px solid var(--border);scroll-margin-top:40px}
+  .section-num{
+    font-family:var(--mono);font-size:11px;letter-spacing:0.3em;
+    color:var(--gold);text-transform:uppercase;margin-bottom:16px;
+    display:flex;align-items:center;gap:12px;
+  }
+  .section-num::before{content:"";width:24px;height:1px;background:var(--gold)}
+  h2.section-title{
+    font-family:var(--serif);font-size:clamp(36px,5vw,56px);
+    line-height:1.05;letter-spacing:-0.02em;font-weight:400;
+    margin-bottom:20px;
+  }
+  h2.section-title em{color:var(--gold);font-style:italic}
+  .section-lede{font-size:17px;color:var(--fg-dim);max-width:680px;margin-bottom:48px;line-height:1.6}
+  
+  .callout {
+    border-left:3px solid var(--gold);
+    background:linear-gradient(90deg,rgba(251,191,36,0.08),transparent);
+    padding:20px 24px;margin:32px 0;border-radius:0 8px 8px 0;
+  }
+  .callout.bad { border-left-color: var(--red); background: linear-gradient(90deg, rgba(239,68,68,0.08), transparent); }
+  .callout p{margin:0;color:var(--fg);font-size:15px}
+  .callout em{color:var(--gold);font-family:var(--serif);font-style:italic;font-size:18px;margin-right:6px}
+  .callout.bad em{color:var(--red)}
+  .callout code{font-family:var(--mono);color:var(--gold);background:rgba(251,191,36,0.1);padding:2px 6px;border-radius:4px;font-size:13px}
+  
+  h3.sub-title{
+    font-family:var(--sans);font-size:13px;font-weight:600;
+    letter-spacing:0.12em;text-transform:uppercase;
+    color:var(--fg);margin:32px 0 16px;
+    display:flex;align-items:center;gap:10px;
+  }
+  h3.sub-title::before{content:"";width:6px;height:6px;background:var(--gold);border-radius:1px;transform:rotate(45deg)}
+  
+  /* PALETTE GRID */
+  .palette-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin: 24px 0;
+  }
+  .swatch {
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    background: var(--surface);
+  }
+  .swatch-color {
+    height: 80px;
+    display: flex;
+    align-items: flex-end;
+    padding: 8px;
+  }
+  .swatch-info {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+  .swatch-name { color: var(--fg); font-weight: 500; }
+  .swatch-hex { color: var(--fg-muted); font-family: var(--mono); font-size: 10.5px; margin-top: 2px; }
+  
+  /* COMPONENTS GRID */
+  .comp-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin: 24px 0;
+  }
+  .comp-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+    transition: border-color 0.2s;
+  }
+  .comp-card:hover { border-color: var(--border-strong); }
+  .comp-cat {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .comp-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .comp-list li {
+    font-size: 13px;
+    color: var(--fg-dim);
+    padding: 3px 0;
+  }
+  
+  /* BUILD ORDER */
+  .order-list {
+    list-style: none;
+    padding: 0;
+    margin: 24px 0;
+    counter-reset: step-counter;
+  }
+  .order-item {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 16px 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 8px;
+    transition: all 0.2s;
+  }
+  .order-item:hover { border-color: var(--gold); transform: translateX(4px); }
+  .order-num {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--gold);
+    background: rgba(251,191,36,0.08);
+    border: 1px solid rgba(251,191,36,0.2);
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .order-text { font-size: 14px; color: var(--fg); }
+  
+  /* ROADMAP */
+  .roadmap-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin: 24px 0;
+  }
+  @media (max-width: 768px) { .roadmap-grid { grid-template-columns: 1fr; } }
+  .roadmap-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+  }
+  .roadmap-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .roadmap-week { font-family: var(--serif); font-size: 28px; color: var(--fg); }
+  .roadmap-tag { font-family: var(--mono); font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold); border: 1px solid var(--gold); padding: 4px 10px; border-radius: 999px; }
+  .roadmap-list { list-style: none; padding: 0; margin: 0; counter-reset: rm-counter; }
+  .roadmap-list li {
+    font-size: 14px;
+    color: var(--fg-dim);
+    padding: 10px 0 10px 32px;
+    position: relative;
+    border-bottom: 1px solid var(--surface-2);
+  }
+  .roadmap-list li:last-child { border-bottom: none; }
+  .roadmap-list li::before {
+    counter-increment: rm-counter;
+    content: counter(rm-counter);
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--fg-muted);
+    background: var(--surface-2);
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .code-block{
+    background:#08080a;border:1px solid var(--border);
+    border-radius:8px;padding:20px 24px;
+    font-family:var(--mono);font-size:12.5px;line-height:1.7;
+    overflow-x:auto;margin:16px 0;position:relative;
+    color: var(--fg-dim);
+  }
+  .code-block .dir { color: var(--cyan); }
+  .code-block .kw { color: var(--gold); }
+  .code-block .com { color: var(--fg-muted); font-style: italic; }
+  
+  /* FOOTER */
+  footer{
+    border-top:1px solid var(--border);
+    padding:60px 0 40px;margin-top:80px;
+    display:flex;justify-content:space-between;align-items:end;
+    flex-wrap:wrap;gap:24px;
+  }
+  .footer-brand{font-family:var(--serif);font-size:32px;color:var(--fg)}
+  .footer-brand em{color:var(--gold);font-style:italic}
+  .footer-meta{font-size:11px;color:var(--fg-muted);letter-spacing:0.15em;text-transform:uppercase;text-align:right}
+  
+  /* REVEAL ANIMATIONS */
+  .reveal{opacity:0;transform:translateY(24px);transition:opacity 0.8s ease,transform 0.8s ease}
+  .reveal.in{opacity:1;transform:translateY(0)}
+  
+  /* MOBILE */
+  @media (max-width:1024px){
+    .shell{grid-template-columns:1fr}
+    .sidenav{position:fixed;top:0;left:-280px;width:280px;z-index:100;transition:left 0.3s}
+    .sidenav.open{left:0}
+    main{padding:0 32px 80px}
+    .menu-toggle{display:flex !important}
+  }
+  .menu-toggle{
+    display:none;position:fixed;top:20px;right:20px;z-index:101;
+    width:44px;height:44px;border-radius:8px;
+    background:var(--surface);border:1px solid var(--border-strong);
+    align-items:center;justify-content:center;cursor:pointer;
+  }
+  .menu-toggle span{width:18px;height:1.5px;background:var(--fg);position:relative}
+  .menu-toggle span::before,.menu-toggle span::after{
+    content:"";position:absolute;left:0;width:18px;height:1.5px;background:var(--fg);
+  }
+  .menu-toggle span::before{top:-6px}
+  .menu-toggle span::after{top:6px}
+</style>
+</head>
+<body>
+
+<button class="menu-toggle" onclick="document.querySelector('.sidenav').classList.toggle('open')"><span></span></button>
+
+<div class="shell">
+
+  <!-- SIDENAV -->
+  <aside class="sidenav">
+    <a href="#top" class="brand">
+      <div class="brand-mark">A</div>
+      <div>
+        <div class="brand-name">AuctXI</div>
+        <div class="brand-sub">UI Blueprint</div>
+      </div>
+    </a>
+
+    <div class="nav-section">Foundations</div>
+    <a class="nav-link" href="#language"><span class="num">01</span>Visual Language</a>
+    <a class="nav-link" href="#components"><span class="num">02</span>Component Library</a>
+    <a class="nav-link" href="#navigation"><span class="num">03</span>Navigation</a>
+    
+    <div class="nav-section">Strategy</div>
+    <a class="nav-link" href="#skip"><span class="num">04</span>What NOT to Build</a>
+    <a class="nav-link" href="#order"><span class="num">05</span>Build Order</a>
+    
+    <div class="nav-section">Execution</div>
+    <a class="nav-link" href="#context"><span class="num">06</span>The AuctXI Twist</a>
+    <a class="nav-link" href="#roadmap"><span class="num">07</span>2-Week Roadmap</a>
+
+    <div class="progress-rail">
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-label"><span>Reading</span><span id="progressPct">0%</span></div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main id="top">
+
+    <!-- HERO -->
+    <div class="hero">
+      <canvas class="hero-canvas" id="heroCanvas"></canvas>
+      <div class="hero-content">
+        <div class="eyebrow"><span class="dot"></span>Frontend Architecture · Design System</div>
+        <h1 class="hero-title">A design system, <em>not a page.</em></h1>
+        <p class="hero-lede">The difference between a beginner dashboard and a professional one isn't prettier pages—it's consistency. Don't just copy a template. Borrow its design language, build 20-30 reusable LEGO blocks, and assemble a product that feels purpose-built for AuctXI.</p>
+      </div>
+    </div>
+
+    <!-- VISUAL LANGUAGE -->
+    <section id="language">
+      <div class="section-num reveal">Section 01</div>
+      <h2 class="section-title reveal">Decide your <em>visual language</em>.</h2>
+      <p class="section-lede reveal">Before opening Figma or VS Code, lock in these rules. Don't introduce random colors, mixed fonts, or arbitrary spacing later. Consistency is what makes a UI look polished.</p>
+
+      <h3 class="sub-title reveal">Color Palette</h3>
+      <div class="palette-grid reveal">
+        <div class="swatch">
+          <div class="swatch-color" style="background: #F59E0B"></div>
+          <div class="swatch-info"><div class="swatch-name">Primary</div><div class="swatch-hex">#F59E0B</div></div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background: #FAFAFA"></div>
+          <div class="swatch-info"><div class="swatch-name">Background</div><div class="swatch-hex">#FAFAFA</div></div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background: #111827"></div>
+          <div class="swatch-info"><div class="swatch-name">Sidebar</div><div class="swatch-hex">#111827</div></div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background: #FFFFFF; border-bottom: 1px solid #E5E7EB;"></div>
+          <div class="swatch-info"><div class="swatch-name">Card</div><div class="swatch-hex">#FFFFFF</div></div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background: #E5E7EB"></div>
+          <div class="swatch-info"><div class="swatch-name">Border</div><div class="swatch-hex">#E5E7EB</div></div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background: #22C55E"></div>
+          <div class="swatch-info"><div class="swatch-name">Success</div><div class="swatch-hex">#22C55E</div></div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background: #EF4444"></div>
+          <div class="swatch-info"><div class="swatch-name">Danger</div><div class="swatch-hex">#EF4444</div></div>
+        </div>
+        <div class="swatch">
+          <div class="swatch-color" style="background: #3B82F6"></div>
+          <div class="swatch-info"><div class="swatch-name">Info</div><div class="swatch-hex">#3B82F6</div></div>
+        </div>
+      </div>
+
+      <h3 class="sub-title reveal">Typography & Spacing</h3>
+      <div class="comp-grid reveal">
+        <div class="comp-card">
+          <div class="comp-cat">Font Family</div>
+          <ul class="comp-list">
+            <li style="font-size: 16px; color: var(--fg); font-family: 'Space Grotesk';">Inter or Manrope</li>
+            <li>One font. No mixing.</li>
+          </ul>
+        </div>
+        <div class="comp-card">
+          <div class="comp-cat">Border Radius</div>
+          <ul class="comp-list">
+            <li style="font-size: 16px; color: var(--fg); font-family: var(--mono);">12px</li>
+            <li>Cards, buttons, inputs, tables</li>
+          </ul>
+        </div>
+        <div class="comp-card">
+          <div class="comp-cat">Shadows</div>
+          <ul class="comp-list">
+            <li>Small</li>
+            <li>Medium</li>
+            <li>Large</li>
+          </ul>
+        </div>
+        <div class="comp-card">
+          <div class="comp-cat">Spacing Grid</div>
+          <ul class="comp-list">
+            <li>8, 16, 24, 32, 48, 64</li>
+            <li>Nothing else. Ever.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- COMPONENTMENTS -->
+    <section id="components">
+      <div class="section-num reveal">Section 02</div>
+      <h2 class="section-title reveal">Define your <em>reusable components</em>.</h2>
+      <p class="section-lede reveal">This is where most beginners go wrong. Instead of building the Dashboard first, build these. Once these exist, every page becomes almost assembling LEGO blocks.</p>
+
+      <div class="comp-grid reveal">
+        <div class="comp-card">
+          <div class="comp-cat">Layout</div>
+          <ul class="comp-list">
+            <li>Sidebar</li><li>Header</li><li>Page Layout</li>
+            <li>Page Container</li><li>Breadcrumb</li><li>Page Title</li>
+          </ul>
+        </div>
+        <div class="comp-card">
+          <div class="comp-cat">UI Components</div>
+          <ul class="comp-list">
+            <li>Button / Icon Button</li><li>Input / Search Box</li>
+            <li>Dropdown / Checkbox</li><li>Switch / Textarea</li>
+            <li>Avatar / Tooltip</li><li>Badge / Divider</li>
+            <li>Card / Modal / Drawer</li><li>Loading Spinner / Skeleton</li>
+          </ul>
+        </div>
+        <div class="comp-card">
+          <div class="comp-cat">Dashboard</div>
+          <ul class="comp-list">
+            <li>Stat Card</li><li>Info Card</li>
+            <li>Chart Card</li><li>Activity Card</li>
+            <li>Recent List</li><li>Metric Row</li>
+          </ul>
+        </div>
+        <div class="comp-card">
+          <div class="comp-cat">Table & Forms</div>
+          <ul class="comp-list">
+            <li>Data Table / Header</li><li>Table Row / Pagination</li>
+            <li>Status Badge</li><li>Empty State</li>
+            <li>Form Wrapper / Section</li><li>Label / Validation Msg</li>
+            <li>File / Image Upload</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- NAVIGATION -->
+    <section id="navigation">
+      <div class="section-num reveal">Section 03</div>
+      <h2 class="section-title reveal">Decide your <em>navigation</em>.</h2>
+      <p class="section-lede reveal">Don't just list pages. Think in a hierarchy. Group related functionality together so the sidebar isn't a mess of 15 flat links.</p>
+
+      <div class="code-block reveal" style="line-height: 1.8;">
+<span class="dir">Dashboard</span>
+
+<span class="dir">Auction Management</span>
+    ├── <span class="kw">Auctions</span>
+    └── <span class="kw">Live Auction</span>
+
+<span class="dir">Team Management</span>
+    ├── <span class="kw">Teams</span>
+    └── <span class="kw">Players</span>
+
+<span class="dir">User Management</span>
+    └── <span class="kw">Users</span>
+
+<span class="dir">Finance</span>
+    └── <span class="kw">Payments</span>
+
+<span class="dir">Analytics</span>
+    └── <span class="kw">Reports</span>
+
+<span class="dir">System</span>
+    ├── <span class="kw">Notifications</span>
+    └── <span class="kw">Settings</span>
+      </div>
+    </section>
+
+    <!-- WHAT NOT TO BUILD -->
+    <section id="skip">
+      <div class="section-num reveal">Section 04</div>
+      <h2 class="section-title reveal">Decide what <em>NOT</em> to build.</h2>
+      <p class="section-lede reveal">This is where you save days. Scope creep kills momentum. Shipped is better than perfect.</p>
+
+      <div class="callout bad reveal">
+        <p><em>Do NOT build —</em> Fancy animations, complex charts, resizable tables, drag and drop, column customization, dark mode, theme switcher, real notifications, real search, or real export. All these can come later.</p>
+      </div>
+    </section>
+
+    <!-- BUILD ORDER -->
+    <section id="order">
+      <div class="section-num reveal">Section 05</div>
+      <h2 class="section-title reveal">The <em>build order</em>.</h2>
+      <p class="section-lede reveal">Follow this exact sequence. Building the foundation first means you aren't reinventing the button on the Payments page.</p>
+
+      <ul class="order-list reveal">
+        <li class="order-item"><div class="order-num">01</div><div class="order-text">Project setup (React, Tailwind, shadcn/ui, Router, Lucide)</div></li>
+        <li class="order-item"><div class="order-num">02</div><div class="order-text">Theme configuration (colors, fonts, spacing, radius, shadow)</div></li>
+        <li class="order-item"><div class="order-num">03</div><div class="order-text">Layout (Sidebar, Header, Page wrapper)</div></li>
+        <li class="order-item"><div class="order-num">04</div><div class="order-text">Core Components (Buttons, Cards, Badges, Inputs, Tables, Modals)</div></li>
+        <li class="order-item"><div class="order-num">05</div><div class="order-text">Mock Data (auctions, users, players, payments, reports)</div></li>
+        <li class="order-item"><div class="order-num">06</div><div class="order-text">Dashboard (Uses Cards, Charts, Lists, Tables)</div></li>
+        <li class="order-item"><div class="order-num">07</div><div class="order-text">Auctions</div></li>
+        <li class="order-item"><div class="order-num">08</div><div class="order-text">Teams</div></li>
+        <li class="order-item"><div class="order-num">09</div><div class="order-text">Players</div></li>
+        <li class="order-item"><div class="order-num">10</div><div class="order-text">Users</div></li>
+        <li class="order-item"><div class="order-num">11</div><div class="order-text">Payments</div></li>
+        <li class="order-item"><div class="order-num">12</div><div class="order-text">Reports</div></li>
+        <li class="order-item"><div class="order-num">13</div><div class="order-text">Settings</div></li>
+      </ul>
+    </section>
+
+    <!-- THE AUCTXI TWIST -->
+    <section id="context">
+      <div class="section-num reveal">Section 06</div>
+      <h2 class="section-title reveal">The <em>AuctXI twist</em>.</h2>
+      <p class="section-lede reveal">The inspiration is very CRUD-heavy (Cards, Filters, Table). That gets repetitive. Make AuctXI feel like an auction platform by adding small contextual panels.</p>
+
+      <div class="comp-grid reveal">
+        <div class="comp-card">
+          <div class="comp-cat">Dashboard</div>
+          <ul class="comp-list">
+            <li>"Current Live Auction" panel</li>
+            <li>Live countdown timer</li>
+            <li>Current highest bid display</li>
+          </ul>
+        </div>
+        <div class="comp-card">
+          <div class="comp-cat">Auctions</div>
+          <ul class="comp-list">
+            <li>Progress indicator</li>
+            <li>Draft → Registration → Live → Completed</li>
+          </ul>
+        </div>
+        <div class="comp-card">
+          <div class="comp-cat">Teams</div>
+          <ul class="comp-list">
+            <li>Budget remaining meter</li>
+            <li>Players acquired count</li>
+          </ul>
+        </div>
+        <div class="comp-card">
+          <div class="comp-cat">Players</div>
+          <ul class="comp-list">
+            <li>Base price vs current bid</li>
+            <li>Sold / Unsold status</li>
+            <li>Clear visual emphasis</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="callout reveal">
+        <p><em>Domain-Specific —</em> These kinds of elements make the product feel purpose-built rather than like a generic admin template.</p>
+      </div>
+    </section>
+
+    <!-- ROADMAP -->
+    <section id="roadmap">
+      <div class="section-num reveal">Section 07</div>
+      <h2 class="section-title reveal">The <em>2-week roadmap</em>.</h2>
+      <p class="section-lede reveal">Only after all pages are visually complete should you start replacing mock data with backend APIs. That separation keeps the frontend moving quickly and makes integration much smoother later.</p>
+
+      <div class="roadmap-grid reveal">
+        <div class="roadmap-card">
+          <div class="roadmap-header">
+            <div class="roadmap-week">Week 1</div>
+            <div class="roadmap-tag">Foundation</div>
+          </div>
+          <ol class="roadmap-list">
+            <li>Design tokens (colors, typography, spacing)</li>
+            <li>Layout (Sidebar, Header, Page Layout)</li>
+            <li>Reusable UI components</li>
+            <li>Mock data structure</li>
+          </ol>
+        </div>
+        <div class="roadmap-card">
+          <div class="roadmap-header">
+            <div class="roadmap-week">Week 2</div>
+            <div class="roadmap-tag">Pages</div>
+          </div>
+          <ol class="roadmap-list">
+            <li>Dashboard</li>
+            <li>Auctions</li>
+            <li>Teams</li>
+            <li>Players</li>
+            <li>Users</li>
+            <li>Payments</li>
+            <li>Reports</li>
+            <li>Settings</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+      <div>
+        <div class="footer-brand">Auct<em>XI</em></div>
+        <p style="margin-top:8px;color:var(--fg-muted);font-size:13px">Cricket auction platform · Built in 9 days by 4 engineers</p>
+      </div>
+      <div class="footer-meta">
+        <div>Vijay · Akram · Rahil · Prajwal</div>
+        <div style="margin-top:6px">UI Blueprint · 2025</div>
+      </div>
+    </footer>
+
+  </main>
+</div>
+
+<script>
+  // HERO CANVAS (Grid layout abstract)
+  (function(){
+    const c = document.getElementById('heroCanvas');
+    if(!c) return;
+    const ctx = c.getContext('2d');
+    let w,h,dots=[];
+    const DOT_SIZE = 40;
+    function resize(){
+      w = c.width = c.offsetWidth * devicePixelRatio;
+      h = c.height = c.offsetHeight * devicePixelRatio;
+      ctx.scale(devicePixelRatio,devicePixelRatio);
+      buildDots();
+    }
+    function buildDots(){
+      dots = [];
+      const cw = c.offsetWidth, ch = c.offsetHeight;
+      const cols = Math.ceil(cw/DOT_SIZE)+1;
+      const rows = Math.ceil(ch/DOT_SIZE)+1;
+      for(let i=0;i<cols;i++){
+        for(let j=0;j<rows;j++){
+          dots.push({
+            x: i*DOT_SIZE,
+            y: j*DOT_SIZE,
+            base: 0.02 + Math.random()*0.04,
+            phase: Math.random()*Math.PI*2,
+            speed: 0.4 + Math.random()*0.8
+          });
+        }
+      }
+    }
+    let t = 0;
+    function draw(){
+      ctx.clearRect(0,0,c.offsetWidth,c.offsetHeight);
+      t += 0.008;
+      
+      // Draw grid lines
+      ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+      ctx.lineWidth = 1;
+      for(let i=0; i<dots.length; i+=4){
+        if(dots[i].y < c.offsetHeight - 10){
+           ctx.beginPath();
+           ctx.moveTo(dots[i].x, dots[i].y);
+           ctx.lineTo(dots[i].x + 120, dots[i].y);
+           ctx.stroke();
+        }
+      }
+      
+      dots.forEach(d=>{
+        const pulse = Math.sin(t*d.speed + d.phase);
+        const alpha = Math.max(0, d.base + pulse*0.06);
+        const size = 1 + Math.max(0,pulse)*1.5;
+        ctx.fillStyle = `rgba(251,191,36,${alpha})`;
+        ctx.beginPath();
+        ctx.arc(d.x, d.y, size, 0, Math.PI*2);
+        ctx.fill();
+      });
+      requestAnimationFrame(draw);
+    }
+    resize();
+    window.addEventListener('resize', resize);
+    draw();
+  })();
+
+  // REVEAL ON SCROLL
+  const reveals = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        e.target.classList.add('in');
+        io.unobserve(e.target);
+      }
+    });
+  },{threshold:0.12, rootMargin:'0px 0px -40px 0px'});
+  reveals.forEach(r=>io.observe(r));
+
+  // ACTIVE NAV + PROGRESS
+  const links = document.querySelectorAll('.nav-link');
+  const sections = document.querySelectorAll('section');
+  const fill = document.getElementById('progressFill');
+  const pct = document.getElementById('progressPct');
+
+  function update(){
+    let current = '';
+    sections.forEach(s=>{
+      const top = s.getBoundingClientRect().top;
+      if(top < 120) current = s.id;
+    });
+    links.forEach(l=>{
+      l.classList.toggle('active', l.getAttribute('href') === '#'+current);
+    });
+    const docH = document.documentElement.scrollHeight - window.innerHeight;
+    const p = Math.min(100, Math.max(0, (window.scrollY / docH) * 100));
+    fill.style.width = p + '%';
+    pct.textContent = Math.round(p) + '%';
+  }
+  window.addEventListener('scroll', update, {passive:true});
+  update();
+
+  // CLOSE MOBILE NAV ON CLICK
+  document.querySelectorAll('.nav-link').forEach(l=>{
+    l.addEventListener('click', ()=>{
+      document.querySelector('.sidenav').classList.remove('open');
+    });
+  });
+</script>
+
+</body>
+</html>

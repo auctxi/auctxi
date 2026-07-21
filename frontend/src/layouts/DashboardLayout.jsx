@@ -1,4 +1,5 @@
 // src/layouts/DashboardLayout.jsx
+
 import { useState } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import {
@@ -11,7 +12,9 @@ import {
   IconLogout,
   IconSettings,
 } from "@tabler/icons-react";
+
 import { useAuth } from "../context/AuthContext";
+import { ROUTES } from "../constants/routes";
 
 const DashboardLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -20,32 +23,124 @@ const DashboardLayout = () => {
 
   const handleLogout = () => {
     logout();
-    navigate("/login");
+    navigate(ROUTES.LOGIN);
   };
 
-  // Define sidebar items per role
+  // ===========================
+  // Sidebar Links
+  // ===========================
+
   const adminLinks = [
-    { to: "/admin", label: "Dashboard", icon: IconLayoutDashboard },
-    { to: "/admin/users", label: "Users", icon: IconUsers },
-    { to: "/admin/settings", label: "Settings", icon: IconSettings },
+    {
+      to: ROUTES.ADMIN_DASHBOARD,
+      label: "Dashboard",
+      icon: IconLayoutDashboard,
+    },
+    {
+      to: ROUTES.ADMIN_AUCTIONS,
+      label: "Auctions",
+      icon: IconBuildingStore,
+    },
+    {
+      to: ROUTES.ADMIN_PLAYERS,
+      label: "Players",
+      icon: IconClipboardList,
+    },
+    {
+      to: ROUTES.ADMIN_TEAMS,
+      label: "Teams",
+      icon: IconUsers,
+    },
+    {
+      to: ROUTES.ADMIN_USERS,
+      label: "Users",
+      icon: IconUsers,
+    },
+    {
+      to: ROUTES.ADMIN_PAYMENTS,
+      label: "Payments",
+      icon: IconClipboardList,
+    },
+    {
+      to: ROUTES.ADMIN_REPORTS,
+      label: "Reports",
+      icon: IconClipboardList,
+    },
+    {
+      to: ROUTES.ADMIN_SETTINGS,
+      label: "Settings",
+      icon: IconSettings,
+    },
   ];
-  const clientLinks = [
-    { to: "/client", label: "Dashboard", icon: IconLayoutDashboard },
-    { to: "/client/orders", label: "Orders", icon: IconClipboardList },
-  ];
+
   const managerLinks = [
-    { to: "/manager", label: "Dashboard", icon: IconLayoutDashboard },
-    { to: "/manager/team", label: "Team", icon: IconUsers },
-    { to: "/manager/reports", label: "Reports", icon: IconBuildingStore },
+    {
+      to: ROUTES.MANAGER_DASHBOARD,
+      label: "Dashboard",
+      icon: IconLayoutDashboard,
+    },
+    {
+      to: ROUTES.MANAGER_AUCTIONS,
+      label: "Auctions",
+      icon: IconBuildingStore,
+    },
+    {
+      to: ROUTES.MANAGER_PLAYERS,
+      label: "Players",
+      icon: IconClipboardList,
+    },
+    {
+      to: ROUTES.MANAGER_PAYMENTS,
+      label: "Payments",
+      icon: IconClipboardList,
+    },
+    {
+      to: ROUTES.MANAGER_REPORTS,
+      label: "Reports",
+      icon: IconUsers,
+    },
+  ];
+
+  const clientLinks = [
+    {
+      to: ROUTES.CLIENT_DASHBOARD,
+      label: "Dashboard",
+      icon: IconLayoutDashboard,
+    },
+    {
+      to: ROUTES.CLIENT_AUCTIONS,
+      label: "Auctions",
+      icon: IconBuildingStore,
+    },
+    {
+      to: ROUTES.CLIENT_PLAYERS,
+      label: "Players",
+      icon: IconClipboardList,
+    },
+    {
+      to: ROUTES.CLIENT_PAYMENTS,
+      label: "Payments",
+      icon: IconClipboardList,
+    },
+    {
+      to: ROUTES.CLIENT_PROFILE,
+      label: "Profile",
+      icon: IconSettings,
+    },
   ];
 
   const getLinks = () => {
     if (!user) return [];
+
     switch (user.role) {
-      case "admin": return adminLinks;
-      case "client": return clientLinks;
-      case "manager": return managerLinks;
-      default: return [];
+      case "admin":
+        return adminLinks;
+      case "manager":
+        return managerLinks;
+      case "client":
+        return clientLinks;
+      default:
+        return [];
     }
   };
 
@@ -53,7 +148,7 @@ const DashboardLayout = () => {
 
   return (
     <div className="flex h-screen bg-gray-100">
-      {/* Mobile overlay */}
+      {/* Mobile Overlay */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-20 bg-black/50 lg:hidden"
@@ -68,9 +163,14 @@ const DashboardLayout = () => {
         }`}
       >
         <div className="flex h-16 items-center justify-between border-b px-6">
-          <span className="text-xl font-bold text-gray-800">Admin Panel</span>
+          <span className="text-xl font-bold text-gray-800">
+            {user?.role
+              ? `${user.role.charAt(0).toUpperCase() + user.role.slice(1)} Panel`
+              : "Dashboard"}
+          </span>
+
           <button
-            className="lg:hidden rounded p-1 hover:bg-gray-200"
+            className="rounded p-1 hover:bg-gray-200 lg:hidden"
             onClick={() => setSidebarOpen(false)}
           >
             <IconX size={24} />
@@ -108,27 +208,29 @@ const DashboardLayout = () => {
         </div>
       </aside>
 
-      {/* Main content area */}
+      {/* Main Content */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Top Navbar */}
         <header className="flex h-16 items-center justify-between border-b bg-white px-4 shadow-sm lg:px-6">
           <button
-            className="lg:hidden rounded p-1 hover:bg-gray-200"
+            className="rounded p-1 hover:bg-gray-200 lg:hidden"
             onClick={() => setSidebarOpen(true)}
           >
             <IconMenu2 size={24} />
           </button>
+
           <div className="flex items-center gap-4">
             <span className="text-sm font-medium text-gray-600">
               {user?.email}
             </span>
+
             <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold uppercase text-blue-800">
               {user?.role}
             </span>
           </div>
         </header>
 
-        {/* Page content */}
+        {/* Page Content */}
         <main className="flex-1 overflow-y-auto p-4 lg:p-6">
           <Outlet />
         </main>

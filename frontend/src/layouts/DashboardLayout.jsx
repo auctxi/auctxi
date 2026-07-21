@@ -15,7 +15,6 @@ import {
 
 import { useAuth } from "../context/AuthContext";
 import { ROUTES } from "../constants/routes";
-import constants from './../../node_modules/d3-scale/src/constant';
 
 const DashboardLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);

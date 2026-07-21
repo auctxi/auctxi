@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { IconLock, IconMail, IconUser } from "@tabler/icons-react";
+import { IconLock, IconMail } from "@tabler/icons-react";
 
 const Signup = () => {
   const [email, setEmail] = useState("");
@@ -19,7 +19,7 @@ const Signup = () => {
       return;
     }
     signup(email, password, role);
-    navigate(`/${role}`, { replace: true });
+    navigate(`/${role}/dashboard`, { replace: true });
   };
 
   return (

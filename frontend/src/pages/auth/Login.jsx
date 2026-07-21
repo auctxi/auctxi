@@ -1,6 +1,6 @@
 // src/pages/Login.jsx
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, Navigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { IconLock, IconMail } from "@tabler/icons-react";
 
@@ -13,8 +13,7 @@ const Login = () => {
 
   // Redirect if already logged in
   if (user) {
-    navigate(`/${user.role}`, { replace: true });
-    return null;
+    return <Navigate to={`/${user.role}/dashboard`} replace />;
   }
 
   const handleSubmit = (e) => {
@@ -23,14 +22,14 @@ const Login = () => {
     if (success) {
       // Login sets user; we navigate after re-render via useEffect, but simpler: use the returned role
       // We'll store role from dummy user
-      const dummyUser = [{ email: "admin@test.com", role: "admin" }]; // not ideal, better to get from context after set
+
       // Better: directly get user after login? Since setUser is async, we can read from DUMMY_USERS.
       // Quick workaround: use context login returns true, we know the user; we could navigate manually.
       // Simplest: after login, navigate based on email.
-      const found = [{ email: "admin@test.com", role: "admin" }]; // not safe
+
       // Instead, we'll use a useEffect to watch user. Or we can call login and then navigate based on the role we know from signup.
       // Here I'll use a useEffect in component, but to keep it simple, I'll just navigate after successful login using a timeout.
-      navigate(`/${roleFromEmail(email)}`, { replace: true });
+      navigate(`/${roleFromEmail(email)}/dashboard`, { replace: true });
     } else {
       setError("Invalid credentials");
     }

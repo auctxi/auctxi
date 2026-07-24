@@ -1,42 +1,39 @@
 /**
- * PAGE EXECUTION FLOW: Login
+ * PAGE EXECUTION FLOW: Signup
  * ---------------------------------------------------------
- * 1. User enters credentials and clicks submit.
- * 2. `handleSubmit` intercepts the form submission to prevent a page reload.
- * 3. It calls the `login` function from `AuthContext.jsx` which talks to the backend.
- * 4. If successful, AuthContext saves the token and updates the global user state.
- * 5. React Router's `<Navigate />` inside ProtectedRoute automatically redirects 
- *    the user to their respective dashboard based on their role.
+ * 1. User fills out the registration form.
+ * 2. `handleSubmit` sends the data to `signup` in AuthContext.
+ * 3. If the backend creates the user successfully, we redirect the user 
+ *    to the Login page to authenticate with their new credentials.
  */
 import { useState } from "react";
-import { Link, useNavigate, Navigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { IconLock, IconMail, IconEye, IconEyeOff, IconShieldLock } from "@tabler/icons-react";
+import { IconLock, IconMail, IconEye, IconEyeOff, IconShieldLock, IconUserCircle } from "@tabler/icons-react";
 
-const Login = () => {
+const Signup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("client");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { login, user } = useAuth();
+  const { signup } = useAuth();
   const navigate = useNavigate();
-
-  if (user) {
-    const rolePath = user.role.replace("ROLE_", "").toLowerCase();
-    return <Navigate to={`/${rolePath}/dashboard`} replace />;
-  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!email || !password) {
+      setError("All fields are required");
+      return;
+    }
     setIsLoading(true);
-    const loggedInUser = await login(email, password);
+    const success = await signup(email.split('@')[0], email, password, role);
     setIsLoading(false);
-    if (loggedInUser) {
-      const rolePath = loggedInUser.role.replace("ROLE_", "").toLowerCase();
-      navigate(`/${rolePath}/dashboard`, { replace: true });
+    if (success) {
+      navigate("/login", { replace: true });
     } else {
-      setError("Invalid email or password. Please try again.");
+      setError("Registration failed. Please try a different email.");
     }
   };
 
@@ -56,10 +53,10 @@ const Login = () => {
         </div>
         <div className="relative z-10 mb-20 max-w-lg">
           <h1 className="text-4xl font-bold text-white leading-tight">
-            The Ultimate Platform for <span className="text-[#f59e0b]">Elite Auctions</span>
+            Join the <span className="text-[#f59e0b]">Elite Network</span>
           </h1>
           <p className="mt-6 text-lg text-gray-400">
-            Bid, build, and win. Experience the most advanced real-time auction platform designed for professional leagues and elite teams.
+            Create your account today and gain access to the most powerful real-time sports auction platform on the market.
           </p>
         </div>
         <div className="relative z-10 text-sm text-gray-500 font-medium tracking-wider">
@@ -67,17 +64,17 @@ const Login = () => {
         </div>
       </div>
 
-      {/* Right Side - Login Form */}
-      <div className="flex w-full items-center justify-center bg-white lg:w-1/2 rounded-l-none lg:rounded-l-3xl shadow-[-10px_0_30px_rgba(0,0,0,0.2)] z-20 relative">
-        <div className="w-full max-w-md px-8 py-12 sm:px-12">
+      {/* Right Side - Signup Form */}
+      <div className="flex w-full items-center justify-center bg-white lg:w-1/2 rounded-l-none lg:rounded-l-3xl shadow-[-10px_0_30px_rgba(0,0,0,0.2)] z-20 relative overflow-y-auto">
+        <div className="w-full max-w-md px-8 py-12 sm:px-12 my-auto">
           
           <div className="mb-10 text-center lg:text-left">
             <div className="lg:hidden flex items-center justify-center gap-3 mb-8">
               <IconShieldLock className="h-8 w-8 text-[#f59e0b]" />
               <span className="text-2xl font-bold tracking-tight text-[#111111]">AuctXI</span>
             </div>
-            <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Welcome back</h2>
-            <p className="mt-2 text-sm text-gray-500">Please enter your details to sign in.</p>
+            <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Create an account</h2>
+            <p className="mt-2 text-sm text-gray-500">Enter your details to get started with AuctXI.</p>
           </div>
 
           {error && (
@@ -103,17 +100,12 @@ const Login = () => {
             </div>
 
             <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-sm font-medium text-gray-700">Password</label>
-                <a href="#" className="text-sm font-medium text-[#f59e0b] hover:text-[#d97706] transition-colors">
-                  Forgot password?
-                </a>
-              </div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
               <div className="relative">
                 <IconLock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={20} stroke={1.5} />
                 <input
                   type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
+                  placeholder="Create a strong password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -130,26 +122,47 @@ const Login = () => {
               </div>
             </div>
 
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Account Role</label>
+              <div className="relative">
+                <IconUserCircle className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 z-10" size={20} stroke={1.5} />
+                <select
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  className="w-full appearance-none rounded-xl border border-gray-200 bg-white py-2.5 pl-11 pr-10 text-sm font-medium text-gray-700 transition-all focus:border-[#f59e0b] focus:outline-none focus:ring-4 focus:ring-[#f59e0b]/10"
+                >
+                  <option value="admin">System Admin</option>
+                  <option value="manager">Auction Manager</option>
+                  <option value="client">Client / Bidder</option>
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-gray-400">
+                  <svg className="h-4 w-4 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                    <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
             <button
               type="submit"
               disabled={isLoading}
-              className="mt-4 w-full rounded-xl bg-[#111111] py-3 text-sm font-semibold text-white shadow-md transition-all hover:bg-[#222222] focus:outline-none focus:ring-4 focus:ring-gray-200 active:scale-[0.98] disabled:opacity-70 disabled:pointer-events-none flex items-center justify-center gap-2"
+              className="mt-6 w-full rounded-xl bg-[#111111] py-3 text-sm font-semibold text-white shadow-md transition-all hover:bg-[#222222] focus:outline-none focus:ring-4 focus:ring-gray-200 active:scale-[0.98] disabled:opacity-70 disabled:pointer-events-none flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-white border-t-transparent"></div>
               ) : (
-                "Sign In"
+                "Create Account"
               )}
             </button>
           </form>
 
           <p className="mt-8 text-center text-sm text-gray-600">
-            Don't have an account?{" "}
+            Already have an account?{" "}
             <Link 
-              to="/signup" 
+              to="/login" 
               className="font-semibold text-[#111111] hover:text-[#f59e0b] transition-colors"
             >
-              Sign up for free
+              Sign in
             </Link>
           </p>
         </div>
@@ -158,4 +171,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Signup;

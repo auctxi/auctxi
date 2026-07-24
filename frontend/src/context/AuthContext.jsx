@@ -1,44 +1,33 @@
-/* eslint-disable react-refresh/only-export-components */
-// src/context/AuthContext.jsx
-import { createContext, useContext, useState } from "react";
+/**
+ * EXECUTION FLOW: Security Guard (ProtectedRoute)
+ * ---------------------------------------------------------
+ * This component wraps sensitive routes in App.jsx. 
+ * Before React Router is allowed to render the requested page, it must pass through here.
+ */
 
-const AuthContext = createContext();
+import { Navigate, Outlet } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
-// Dummy starter users
-const DUMMY_USERS = [
-  { email: "admin@test.com", password: "admin123", role: "admin" },
-  { email: "client@test.com", password: "client123", role: "client" },
-  { email: "manager@test.com", password: "manager123", role: "manager" },
-];
+const ProtectedRoute = ({ allowedRoles }) => {
+  // 1. Ask the global AuthContext "Who is currently logged in?"
+  const { user } = useAuth();
 
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
+  // 2. UNAUTHENTICATED: If no user exists, kick them to the login page immediately.
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
 
-  const login = (email, password) => {
-    const found = DUMMY_USERS.find(
-      (u) => u.email === email && u.password === password
-    );
-    if (found) {
-      setUser({ email: found.email, role: found.role });
-      return true;
-    }
-    return false;
-  };
+  // 3. UNAUTHORIZED: The user is logged in, but do they have the right role?
+  // E.g., a Client trying to access /admin/players
+  if (allowedRoles && !allowedRoles.includes(user.role)) {
+    // Determine where they *should* be based on their actual role
+    const rolePath = user.role.replace("ROLE_", "").toLowerCase();
+    return <Navigate to={`/${rolePath}/dashboard`} replace />;
+  }
 
-  const signup = (email, password, role) => {
-    // Very simple – just add to the array and log in
-    DUMMY_USERS.push({ email, password, role });
-    setUser({ email, role });
-    return true;
-  };
+  // 4. AUTHORIZED: User is logged in and has the correct role.
+  // <Outlet /> tells React Router to go ahead and render the nested page component.
+  return <Outlet />;
+};
 
-  const logout = () => setUser(null);
-
-  return (
-    <AuthContext.Provider value={{ user, login, signup, logout }}>
-      {children}
-    </AuthContext.Provider>
-  );
-}
-
-export const useAuth = () => useContext(AuthContext);
+export default ProtectedRoute;

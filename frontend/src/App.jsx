@@ -1,114 +1,141 @@
-// src/App.jsx
+/**
+ * EXECUTION FLOW STEP 3: The Central Router
+ * ---------------------------------------------------------
+ * This component acts as the "Traffic Controller" for the entire application.
+ * When a user navigates to a URL (e.g., /admin/players), this file determines
+ * which UI components should be rendered based on the path and the user's role.
+ */
 
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import Layout from './components/layout/Layout';
+import ClientLayout from './components/layout/ClientLayout';
+import ProtectedRoute from './components/layout/ProtectedRoute';
+import Login from './pages/auth/Login';
+import Signup from './pages/auth/Signup';
 
-import { AuthProvider } from "./context/AuthContext";
-import DashboardLayout from "./layouts/DashboardLayout";
-import ProtectedRoute from "./components/ProtectedRoute";
+// Admin Pages
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AuctionsList from './pages/admin/Auctions/AuctionsList';
+import AuctionCreate from './pages/admin/Auctions/AuctionCreate';
+import AuctionDetail from './pages/admin/Auctions/AuctionDetail';
+import TeamsList from './pages/admin/Teams/TeamsList';
+import TeamCreate from './pages/admin/Teams/TeamCreate';
+import TeamDetail from './pages/admin/Teams/TeamDetail';
+import PlayersList from './pages/admin/Players/PlayersList';
+import PlayerCreate from './pages/admin/Players/PlayerCreate';
+import PlayerDetail from './pages/admin/Players/PlayerDetail';
+import UsersList from './pages/admin/Users/UsersList';
+import UserCreate from './pages/admin/Users/UserCreate';
+import BidsList from './pages/admin/Bids/BidsList';
+import PaymentsList from './pages/admin/Payments/PaymentsList';
+import ReportsPage from './pages/admin/Reports/ReportsPage';
+import NotificationsPage from './pages/admin/Notifications/NotificationsPage';
+import SettingsPage from './pages/admin/Settings/SettingsPage';
+import SupportPage from './pages/admin/Support/SupportPage';
+import ProfilePage from './pages/admin/Profile/ProfilePage';
 
-import Login from "./pages/auth/Login";
-import Signup from "./pages/auth/Signup";
+// Manager Pages
+import ManagerDashboard from './pages/manager/ManagerDashboard';
+import LiveAuction from './pages/manager/LiveAuction';
+import ManagerPlayerPool from './pages/manager/PlayerPool';
+import LiveTeams from './pages/manager/LiveTeams';
 
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import ClientDashboard from "./pages/client/ClientDashboard";
-import ManagerDashboard from "./pages/manager/ManagerDashboard";
-
-import { ROUTES } from "./constants/routes"; // <-- Update path if required
+// Client Pages
+import ClientDashboard from './pages/client/ClientDashboard';
+import ClientAuctionsList from './pages/client/AuctionsList';
+import AuctionDetails from './pages/client/AuctionDetails';
+import PlayerPool from './pages/client/PlayerPool';
+import ClientProfile from './pages/client/Profile/Profile';
 
 function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-
-          {/* =========================
-              Public Routes
-          ========================== */}
-
-          <Route path={ROUTES.LOGIN} element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-
-          {/* =========================
-              Admin Routes
-          ========================== */}
-
-          <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
-            <Route element={<DashboardLayout />}>
-
-              <Route
-                path={ROUTES.ADMIN_DASHBOARD}
-                element={<AdminDashboard />}
-              />
-
-              {/* Future Admin Pages */}
-
-              {/* <Route path={ROUTES.ADMIN_AUCTIONS} element={<AdminAuctions />} /> */}
-              {/* <Route path={ROUTES.ADMIN_PLAYERS} element={<AdminPlayers />} /> */}
-              {/* <Route path={ROUTES.ADMIN_TEAMS} element={<AdminTeams />} /> */}
-              {/* <Route path={ROUTES.ADMIN_USERS} element={<AdminUsers />} /> */}
-              {/* <Route path={ROUTES.ADMIN_PAYMENTS} element={<AdminPayments />} /> */}
-              {/* <Route path={ROUTES.ADMIN_REPORTS} element={<AdminReports />} /> */}
-              {/* <Route path={ROUTES.ADMIN_SETTINGS} element={<AdminSettings />} /> */}
-
-            </Route>
+    <BrowserRouter>
+      <Routes>
+        {/* Public Routes (Accessible by anyone without logging in) */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        
+        {/* 
+          EXECUTION FLOW STEP 4: The Layout Wrappers (Admin & Manager)
+          ---------------------------------------------------------
+          Routes nested inside <Layout /> will automatically render the Sidebar and Header.
+          The specific page component (like AdminDashboard) will be injected 
+          into the <Outlet /> placeholder located inside Layout.jsx.
+        */}
+        <Route element={<Layout />}>
+          
+          {/* 
+            EXECUTION FLOW STEP 5: Role-Based Security Guards
+            ---------------------------------------------------------
+            Before letting the user see these Admin routes, ProtectedRoute intercepts the request.
+            It checks AuthContext to see if (1) the user is logged in, and (2) has 'ROLE_ADMIN'.
+            If not, it instantly redirects them to the login page.
+          */}
+          <Route element={<ProtectedRoute allowedRoles={['ROLE_ADMIN']} />}>
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            
+            <Route path="/admin/auctions" element={<AuctionsList />} />
+            <Route path="/admin/auctions/create" element={<AuctionCreate />} />
+            <Route path="/admin/auctions/:id" element={<AuctionDetail />} />
+            
+            <Route path="/admin/teams" element={<TeamsList />} />
+            <Route path="/admin/teams/create" element={<TeamCreate />} />
+            <Route path="/admin/teams/:id" element={<TeamDetail />} />
+            
+            <Route path="/admin/players" element={<PlayersList />} />
+            <Route path="/admin/players/create" element={<PlayerCreate />} />
+            <Route path="/admin/players/:id" element={<PlayerDetail />} />
+            
+            <Route path="/admin/users" element={<UsersList />} />
+            <Route path="/admin/users/create" element={<UserCreate />} />
+            
+            <Route path="/admin/bids" element={<BidsList />} />
+            <Route path="/admin/payments" element={<PaymentsList />} />
+            <Route path="/admin/reports" element={<ReportsPage />} />
+            <Route path="/admin/notifications" element={<NotificationsPage />} />
+            <Route path="/admin/settings" element={<SettingsPage />} />
+            <Route path="/admin/support" element={<SupportPage />} />
+            <Route path="/admin/profile" element={<ProfilePage />} />
           </Route>
 
-          {/* =========================
-              Manager Routes
-          ========================== */}
-
-          <Route element={<ProtectedRoute allowedRoles={["manager"]} />}>
-            <Route element={<DashboardLayout />}>
-
-              <Route
-                path={ROUTES.MANAGER_DASHBOARD}
-                element={<ManagerDashboard />}
-              />
-
-              {/* Future Manager Pages */}
-
-              {/* <Route path={ROUTES.MANAGER_AUCTIONS} element={<ManagerAuctions />} /> */}
-              {/* <Route path={ROUTES.MANAGER_PLAYERS} element={<ManagerPlayers />} /> */}
-              {/* <Route path={ROUTES.MANAGER_PAYMENTS} element={<ManagerPayments />} /> */}
-              {/* <Route path={ROUTES.MANAGER_REPORTS} element={<ManagerReports />} /> */}
-
-            </Route>
+          {/* Manager Security Guards */}
+          <Route element={<ProtectedRoute allowedRoles={['ROLE_MANAGER']} />}>
+            <Route path="/manager/dashboard" element={<ManagerDashboard />} />
+            <Route path="/manager/live-auction" element={<LiveAuction />} />
+            <Route path="/manager/player-pool" element={<ManagerPlayerPool />} />
+            <Route path="/manager/live-teams" element={<LiveTeams />} />
           </Route>
 
-          {/* =========================
-              Client Routes
-          ========================== */}
+        </Route>
 
-          <Route element={<ProtectedRoute allowedRoles={["client"]} />}>
-            <Route element={<DashboardLayout />}>
-
-              <Route
-                path={ROUTES.CLIENT_DASHBOARD}
-                element={<ClientDashboard />}
-              />
-
-              {/* Future Client Pages */}
-
-              {/* <Route path={ROUTES.CLIENT_AUCTIONS} element={<ClientAuctions />} /> */}
-              {/* <Route path={ROUTES.CLIENT_PLAYERS} element={<ClientPlayers />} /> */}
-              {/* <Route path={ROUTES.CLIENT_PAYMENTS} element={<ClientPayments />} /> */}
-              {/* <Route path={ROUTES.CLIENT_PROFILE} element={<ClientProfile />} /> */}
-
-            </Route>
+        {/* 
+          EXECUTION FLOW STEP 4b: The Client Layout
+          ---------------------------------------------------------
+          Clients get a completely different UI wrapper (Top Nav instead of Sidebar).
+        */}
+        <Route element={<ClientLayout />}>
+          {/* Client Routes */}
+          <Route element={<ProtectedRoute allowedRoles={['ROLE_CLIENT']} />}>
+            <Route path="/client/dashboard" element={<ClientDashboard />} />
+            <Route path="/client/auctions" element={<ClientAuctionsList />} />
+            <Route path="/client/auction/:id" element={<AuctionDetails />} />
+            <Route path="/client/player-pool" element={<PlayerPool />} />
+            <Route path="/client/payments" element={<PaymentsList />} />
+            <Route path="/client/profile" element={<ClientProfile />} />
           </Route>
+        </Route>
 
-          {/* =========================
-              Default Route
-          ========================== */}
-
-          <Route
-            path="*"
-            element={<Navigate to={ROUTES.LOGIN} replace />}
-          />
-
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+        {/* 
+          EXECUTION FLOW STEP 6: The Fallback
+          ---------------------------------------------------------
+          If the user types a URL that doesn't match any route above, 
+          they are aggressively redirected to the login page.
+        */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

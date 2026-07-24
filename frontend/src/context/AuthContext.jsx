@@ -1,95 +1,33 @@
-/* eslint-disable react-refresh/only-export-components */
-// src/context/AuthContext.jsx
-import { createContext, useContext, useState, useEffect } from "react";
-import { api } from "../services/api";
-
-const AuthContext = createContext();
-
 /**
- * EXECUTION FLOW: AuthProvider
+ * EXECUTION FLOW: Security Guard (ProtectedRoute)
  * ---------------------------------------------------------
- * This component wraps the entire application. It acts as the single source of truth
- * for the user's identity and permissions.
+ * This component wraps sensitive routes in App.jsx. 
+ * Before React Router is allowed to render the requested page, it must pass through here.
  */
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
 
-  /**
-   * ON MOUNT (Page Refresh/Load):
-   * 1. React runs this useEffect immediately.
-   * 2. It checks localStorage to see if a valid user object was saved from a previous session.
-   * 3. If found, it hydrates the `user` state, keeping the user logged in.
-   * 4. Finally, it sets loading to false, which unblocks the rest of the app from rendering.
-   */
-  useEffect(() => {
-    try {
-      const storedUser = localStorage.getItem("user");
-      if (storedUser && storedUser !== "undefined") {
-        setUser(JSON.parse(storedUser));
-      }
-    } catch (e) {
-      console.error("Failed to parse user from local storage", e);
-      localStorage.removeItem("user");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+import { Navigate, Outlet } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
-  /**
-   * LOGIN FLOW:
-   * 1. Called by Login.jsx when the user submits the form.
-   * 2. Sends credentials to the backend.
-   * 3. If successful, saves the JWT token and user profile to localStorage (for persistence).
-   * 4. Updates the global `user` state, which instantly triggers React Router to redirect them
-   *    to their protected dashboard.
-   */
-  const login = async (email, password) => {
-    try {
-      const response = await api.post("/api/v1/auth/login", { email, password });
-      const { accessToken, user } = response.data;
-      localStorage.setItem("token", accessToken);
-      localStorage.setItem("user", JSON.stringify(user));
-      setUser(user);
-      return user;
-    } catch (error) {
-      console.error("Login failed:", error);
-      return null;
-    }
-  };
+const ProtectedRoute = ({ allowedRoles }) => {
+  // 1. Ask the global AuthContext "Who is currently logged in?"
+  const { user } = useAuth();
 
-  /**
-   * SIGNUP FLOW:
-   * Registers a new user. Does NOT log them in automatically (they are redirected to login).
-   */
-  const signup = async (name, email, password, role) => {
-    try {
-      const backendRole = `ROLE_${role.toUpperCase()}`;
-      await api.post("/api/v1/auth/register", { name, email, password, role: backendRole });
-      return true;
-    } catch (error) {
-      console.error("Signup failed:", error);
-      return false;
-    }
-  };
+  // 2. UNAUTHENTICATED: If no user exists, kick them to the login page immediately.
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
 
-  /**
-   * LOGOUT FLOW:
-   * Wipes the session from localStorage and resets the global state.
-   * This immediately causes ProtectedRoute to kick the user back to the login screen.
-   */
-  const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    setUser(null);
-  };
+  // 3. UNAUTHORIZED: The user is logged in, but do they have the right role?
+  // E.g., a Client trying to access /admin/players
+  if (allowedRoles && !allowedRoles.includes(user.role)) {
+    // Determine where they *should* be based on their actual role
+    const rolePath = user.role.replace("ROLE_", "").toLowerCase();
+    return <Navigate to={`/${rolePath}/dashboard`} replace />;
+  }
 
-  return (
-    <AuthContext.Provider value={{ user, login, signup, logout }}>
-      {/* Do not render the app (children) until we finish checking localStorage */}
-      {!loading && children}
-    </AuthContext.Provider>
-  );
-}
+  // 4. AUTHORIZED: User is logged in and has the correct role.
+  // <Outlet /> tells React Router to go ahead and render the nested page component.
+  return <Outlet />;
+};
 
-export const useAuth = () => useContext(AuthContext);
+export default ProtectedRoute;

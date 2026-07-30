@@ -27,7 +27,6 @@ export default function LiveAuction() {
     },
     image: 'https://ui-avatars.com/api/?name=Rohit+Sharma&size=200&background=111111&color=F59E0B'
   };
-
   const activeTeams = [
     { id: 'MI', name: 'Mumbai Indians', purse: '₹30.5 Cr', color: 'bg-blue-600' },
     { id: 'CSK', name: 'Chennai Super Kings', purse: '₹45.0 Cr', color: 'bg-yellow-500' },

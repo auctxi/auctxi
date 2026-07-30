@@ -3,5 +3,5 @@ export default function AdminLayout(){
         <section>
             admin layout
         </section>
-    )
+)
 }

@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @Tag(name = "Dashboard Analytics", description = "Endpoints for fetching system-wide aggregated analytics")
 public class DashboardController {
-
     private final DashboardService dashboardService;
 
     @GetMapping("/summary")

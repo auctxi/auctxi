@@ -16,6 +16,5 @@ public interface BidRepository extends JpaRepository<Bid, String> {
     
     List<Bid> findTop10ByOrderByCreatedAtDesc();
     List<Bid> findAllByOrderByCreatedAtDesc();
-    
     List<Bid> findByAuctionIdOrderByCreatedAtAsc(String auctionId);
 }

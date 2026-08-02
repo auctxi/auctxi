@@ -17,7 +17,6 @@ export default function LiveTeams() {
         title="Live Teams" 
         breadcrumbs={[{ label: 'Dashboard', path: '/manager' }, { label: 'Live Teams' }]}
       />
-
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {MOCK_TEAMS.map(team => (
           <Card key={team.id} className="flex flex-col overflow-hidden">

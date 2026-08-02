@@ -26,7 +26,6 @@ export default function TeamsList() {
     { title: 'Inactive Teams', value: '2' },
     { title: 'Total Players', value: '240' },
   ];
-
   const columns = [
     {
       key: 'name',
@@ -105,7 +104,6 @@ export default function TeamsList() {
           onFilterChange={(filterId, value) => console.log(filterId, value)}
         />
       </div>
-
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <DataTable
           columns={columns}

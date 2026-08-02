@@ -36,8 +36,6 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
-// We define a separate instance for Payment Service if we don't use proxy
 const paymentApi = axios.create({
   baseURL: 'http://localhost:8081',
   headers: {
@@ -50,7 +48,6 @@ paymentApi.interceptors.request.use((config) => {
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
-
 paymentApi.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -59,6 +56,4 @@ paymentApi.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
-
 export { api, paymentApi };

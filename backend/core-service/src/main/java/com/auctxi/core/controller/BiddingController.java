@@ -15,12 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/**
- * Controller responsible for the core Live Bidding Engine.
- *
- * This controller handles placing bids and ultimately executing the sale of a player.
- * It is designed to handle high-frequency requests during live auctions.
- */
+
 @RestController
 @RequestMapping("/api/v1/bidding")
 @RequiredArgsConstructor

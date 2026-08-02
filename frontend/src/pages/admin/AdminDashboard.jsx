@@ -25,7 +25,6 @@ const mockRecentAuctions = [
   { id: 4, name: 'PSL 2026 Draft', date: '2026-06-10', teams: 6, players: 280, revenue: '₹950M', status: 'completed' },
   { id: 5, name: 'SA20 2026 Auction', date: '2026-09-05', teams: 6, players: 200, revenue: '₹1.1B', status: 'upcoming' },
 ];
-
 const columns = [
   { header: 'Auction Name', accessorKey: 'name' },
   { header: 'Date', accessorKey: 'date' },
@@ -187,5 +186,4 @@ const AdminDashboard = () => {
     </div>
   );
 };
-
 export default AdminDashboard;

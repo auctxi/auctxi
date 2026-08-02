@@ -20,7 +20,6 @@ const mockPayments = [
 export default function PaymentsList() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
-
   const columns = [
     { header: 'Payment ID', accessorKey: 'id' },
     { header: 'Team', accessorKey: 'team' },

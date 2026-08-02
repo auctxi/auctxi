@@ -14,6 +14,5 @@ public interface TeamRepository extends JpaRepository<Team, String> {
     boolean existsByAuctionAndName(com.auctxi.core.entity.Auction auction, String name);
     boolean existsByAuctionAndShortName(com.auctxi.core.entity.Auction auction, String shortName);
     long countByAuction(com.auctxi.core.entity.Auction auction);
-    
     java.util.List<Team> findByAuctionId(String auctionId);
 }

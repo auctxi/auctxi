@@ -47,6 +47,11 @@ const DashboardLayout = () => {
       icon: IconClipboardList,
     },
     {
+      to: "/admin/rule-templates",
+      label: "Rule Templates",
+      icon: IconClipboardList,
+    },
+    {
       to: ROUTES.ADMIN_TEAMS,
       label: "Teams",
       icon: IconUsers,

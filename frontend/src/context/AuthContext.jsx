@@ -1,33 +1,64 @@
-/**
- * EXECUTION FLOW: Security Guard (ProtectedRoute)
- * ---------------------------------------------------------
- * This component wraps sensitive routes in App.jsx. 
- * Before React Router is allowed to render the requested page, it must pass through here.
- */
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import api from '../services/api';
 
-import { Navigate, Outlet } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
+const AuthContext = createContext(null);
 
-const ProtectedRoute = ({ allowedRoles }) => {
-  // 1. Ask the global AuthContext "Who is currently logged in?"
-  const { user } = useAuth();
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // 2. UNAUTHENTICATED: If no user exists, kick them to the login page immediately.
-  if (!user) {
-    return <Navigate to="/login" replace />;
+  useEffect(() => {
+    // Check if user is already logged in
+    const token = localStorage.getItem('token');
+    const storedUser = localStorage.getItem('user');
+
+    if (token && storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (e) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+      }
+    }
+    setLoading(false);
+  }, []);
+
+  const login = async (email, password) => {
+    try {
+      const response = await api.post('/auth/login', { email, password });
+      const { accessToken, user: userData } = response.data;
+      
+      localStorage.setItem('token', accessToken);
+      localStorage.setItem('user', JSON.stringify(userData));
+      setUser(userData);
+      return userData;
+    } catch (error) {
+      console.error("Login failed", error);
+      return null;
+    }
+  };
+
+  const logout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
+  };
+
+  if (loading) {
+    return <div>Loading auth...</div>;
   }
 
-  // 3. UNAUTHORIZED: The user is logged in, but do they have the right role?
-  // E.g., a Client trying to access /admin/players
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
-    // Determine where they *should* be based on their actual role
-    const rolePath = user.role.replace("ROLE_", "").toLowerCase();
-    return <Navigate to={`/${rolePath}/dashboard`} replace />;
-  }
-
-  // 4. AUTHORIZED: User is logged in and has the correct role.
-  // <Outlet /> tells React Router to go ahead and render the nested page component.
-  return <Outlet />;
+  return (
+    <AuthContext.Provider value={{ user, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
-export default ProtectedRoute;
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};

@@ -1,15 +1,15 @@
 import axios from 'axios';
-import { toast } from 'react-toastify';
+
+const API_BASE_URL = 'http://localhost:8080/api/v1';
 
 const api = axios.create({
-  // Vite proxy config will route /api to localhost:8080 (core-service)
-  // Payment service runs on 8081, so we might need absolute URL or another proxy for payments.
-  baseURL: '/', 
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
+// Request interceptor: attach JWT token to every outgoing request
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -21,14 +21,11 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// Response interceptor: handle 401 Unauthorized globally
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    const message = error.response?.data?.message || error.message || 'An unexpected error occurred';
-    toast.error(message);
-    
-    if (error.response?.status === 401 || error.response?.status === 403) {
-      // Clear token and redirect to login if unauthorized
+    if (error.response && error.response.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';

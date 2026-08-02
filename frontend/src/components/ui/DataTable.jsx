@@ -19,7 +19,6 @@ const DataTable = ({
   emptyTitle = 'No data available',
   emptyDescription = 'There are no records to display.',
 }) => {
-  // STATE 1: If data is being fetched, render a skeleton loader (animate-pulse)
   if (loading) {
     return (
       <div className="rounded-xl border border-gray-100 bg-white shadow-sm overflow-hidden animate-pulse">

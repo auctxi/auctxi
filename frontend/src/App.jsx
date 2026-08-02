@@ -6,135 +6,118 @@
  * which UI components should be rendered based on the path and the user's role.
  */
 
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Layout from './components/layout/Layout';
-import ClientLayout from './components/layout/ClientLayout';
+import DashboardLayout from './layouts/DashboardLayout';
+import ClientLayout from './layouts/ClientLayout';
 import ProtectedRoute from './components/layout/ProtectedRoute';
 import Login from './pages/auth/Login';
 import Signup from './pages/auth/Signup';
 
-// Admin Pages
-import AdminDashboard from './pages/admin/AdminDashboard';
-import AuctionsList from './pages/admin/Auctions/AuctionsList';
-import AuctionCreate from './pages/admin/Auctions/AuctionCreate';
-import AuctionDetail from './pages/admin/Auctions/AuctionDetail';
-import TeamsList from './pages/admin/Teams/TeamsList';
-import TeamCreate from './pages/admin/Teams/TeamCreate';
-import TeamDetail from './pages/admin/Teams/TeamDetail';
-import PlayersList from './pages/admin/Players/PlayersList';
-import PlayerCreate from './pages/admin/Players/PlayerCreate';
-import PlayerDetail from './pages/admin/Players/PlayerDetail';
-import UsersList from './pages/admin/Users/UsersList';
-import UserCreate from './pages/admin/Users/UserCreate';
-import BidsList from './pages/admin/Bids/BidsList';
-import PaymentsList from './pages/admin/Payments/PaymentsList';
-import ReportsPage from './pages/admin/Reports/ReportsPage';
-import NotificationsPage from './pages/admin/Notifications/NotificationsPage';
-import SettingsPage from './pages/admin/Settings/SettingsPage';
-import SupportPage from './pages/admin/Support/SupportPage';
-import ProfilePage from './pages/admin/Profile/ProfilePage';
+// Lazy-loaded Admin Pages
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
+const PlayersList = lazy(() => import('./pages/admin/Players/PlayersList'));
+const RuleTemplatesList = lazy(() => import('./pages/admin/RuleTemplates/RuleTemplatesList'));
 
-// Manager Pages
-import ManagerDashboard from './pages/manager/ManagerDashboard';
-import LiveAuction from './pages/manager/LiveAuction';
-import ManagerPlayerPool from './pages/manager/PlayerPool';
-import LiveTeams from './pages/manager/LiveTeams';
+// Lazy-loaded Manager Pages
+const ManagerDashboard = lazy(() => import('./pages/manager/ManagerDashboard'));
+const ManagerAuctionsList = lazy(() => import('./pages/manager/Auctions/ManagerAuctionsList'));
+const ManagerAuctionCreate = lazy(() => import('./pages/manager/Auctions/AuctionCreate'));
+const AuctionDetails = lazy(() => import('./pages/manager/Auctions/AuctionDetails'));
+const LiveAuction = lazy(() => import('./pages/manager/LiveAuction'));
+const LiveTeams = lazy(() => import('./pages/manager/LiveTeams'));
 
-// Client Pages
-import ClientDashboard from './pages/client/ClientDashboard';
-import ClientAuctionsList from './pages/client/AuctionsList';
-import AuctionDetails from './pages/client/AuctionDetails';
-import PlayerPool from './pages/client/PlayerPool';
-import ClientProfile from './pages/client/Profile/Profile';
+// Lazy-loaded Client Pages
+const ClientDashboard = lazy(() => import('./pages/client/ClientDashboard'));
+const AvailableAuctions = lazy(() => import('./pages/client/Auctions/AvailableAuctions'));
+
+// Simple loading fallback
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-[400px]">
+    <div className="flex flex-col items-center gap-3">
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-amber-500 border-t-transparent"></div>
+      <span className="text-sm text-gray-500">Loading...</span>
+    </div>
+  </div>
+);
+
+// Placeholder component for pages not yet built
+const ComingSoon = ({ title }) => (
+  <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
+    <div className="h-16 w-16 rounded-full bg-amber-50 flex items-center justify-center mb-4">
+      <svg className="h-8 w-8 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+      </svg>
+    </div>
+    <h2 className="text-xl font-semibold text-gray-900">{title || 'Coming Soon'}</h2>
+    <p className="mt-2 text-sm text-gray-500 max-w-md">This page is under construction and will be available soon.</p>
+  </div>
+);
 
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        {/* Public Routes (Accessible by anyone without logging in) */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        
-        {/* 
-          EXECUTION FLOW STEP 4: The Layout Wrappers (Admin & Manager)
-          ---------------------------------------------------------
-          Routes nested inside <Layout /> will automatically render the Sidebar and Header.
-          The specific page component (like AdminDashboard) will be injected 
-          into the <Outlet /> placeholder located inside Layout.jsx.
-        */}
-        <Route element={<Layout />}>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
           
-          {/* 
-            EXECUTION FLOW STEP 5: Role-Based Security Guards
-            ---------------------------------------------------------
-            Before letting the user see these Admin routes, ProtectedRoute intercepts the request.
-            It checks AuthContext to see if (1) the user is logged in, and (2) has 'ROLE_ADMIN'.
-            If not, it instantly redirects them to the login page.
-          */}
-          <Route element={<ProtectedRoute allowedRoles={['ROLE_ADMIN']} />}>
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          {/* Admin & Manager Layout (Sidebar) */}
+          <Route element={<DashboardLayout />}>
             
-            <Route path="/admin/auctions" element={<AuctionsList />} />
-            <Route path="/admin/auctions/create" element={<AuctionCreate />} />
-            <Route path="/admin/auctions/:id" element={<AuctionDetail />} />
-            
-            <Route path="/admin/teams" element={<TeamsList />} />
-            <Route path="/admin/teams/create" element={<TeamCreate />} />
-            <Route path="/admin/teams/:id" element={<TeamDetail />} />
-            
-            <Route path="/admin/players" element={<PlayersList />} />
-            <Route path="/admin/players/create" element={<PlayerCreate />} />
-            <Route path="/admin/players/:id" element={<PlayerDetail />} />
-            
-            <Route path="/admin/users" element={<UsersList />} />
-            <Route path="/admin/users/create" element={<UserCreate />} />
-            
-            <Route path="/admin/bids" element={<BidsList />} />
-            <Route path="/admin/payments" element={<PaymentsList />} />
-            <Route path="/admin/reports" element={<ReportsPage />} />
-            <Route path="/admin/notifications" element={<NotificationsPage />} />
-            <Route path="/admin/settings" element={<SettingsPage />} />
-            <Route path="/admin/support" element={<SupportPage />} />
-            <Route path="/admin/profile" element={<ProfilePage />} />
+            {/* Admin Routes */}
+            <Route element={<ProtectedRoute allowedRoles={['ROLE_ADMIN']} />}>
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
+              
+              {/* Player Management (shared component, backend enforces visibility) */}
+              <Route path="/admin/players" element={<PlayersList />} />
+              
+              {/* Rule Templates (Admin only) */}
+              <Route path="/admin/rule-templates" element={<RuleTemplatesList />} />
+              
+              {/* Placeholder pages for features not yet built */}
+              <Route path="/admin/auctions" element={<ComingSoon title="Auctions Management" />} />
+              <Route path="/admin/teams" element={<ComingSoon title="Teams Management" />} />
+              <Route path="/admin/users" element={<ComingSoon title="Users Management" />} />
+              <Route path="/admin/bids" element={<ComingSoon title="Bids History" />} />
+              <Route path="/admin/payments" element={<ComingSoon title="Payments" />} />
+              <Route path="/admin/reports" element={<ComingSoon title="Reports" />} />
+              <Route path="/admin/notifications" element={<ComingSoon title="Notifications" />} />
+              <Route path="/admin/settings" element={<ComingSoon title="Settings" />} />
+              <Route path="/admin/support" element={<ComingSoon title="Support" />} />
+              <Route path="/admin/profile" element={<ComingSoon title="Profile" />} />
+            </Route>
+
+            {/* Manager Routes */}
+            <Route element={<ProtectedRoute allowedRoles={['ROLE_MANAGER']} />}>
+              <Route path="/manager/dashboard" element={<ManagerDashboard />} />
+              <Route path="/manager/auctions" element={<ManagerAuctionsList />} />
+              <Route path="/manager/auctions/create" element={<ManagerAuctionCreate />} />
+              <Route path="/manager/auctions/:id" element={<AuctionDetails />} />
+              <Route path="/manager/players" element={<PlayersList />} />
+              <Route path="/manager/live-auction" element={<LiveAuction />} />
+              <Route path="/manager/live-teams" element={<LiveTeams />} />
+            </Route>
+
           </Route>
 
-          {/* Manager Security Guards */}
-          <Route element={<ProtectedRoute allowedRoles={['ROLE_MANAGER']} />}>
-            <Route path="/manager/dashboard" element={<ManagerDashboard />} />
-            <Route path="/manager/live-auction" element={<LiveAuction />} />
-            <Route path="/manager/player-pool" element={<ManagerPlayerPool />} />
-            <Route path="/manager/live-teams" element={<LiveTeams />} />
+          {/* Client Layout (Top Nav) */}
+          <Route element={<ClientLayout />}>
+            <Route element={<ProtectedRoute allowedRoles={['ROLE_CLIENT']} />}>
+              <Route path="/client/dashboard" element={<ClientDashboard />} />
+              <Route path="/client/auctions" element={<AvailableAuctions />} />
+              <Route path="/client/player-pool" element={<ComingSoon title="Player Pool" />} />
+              <Route path="/client/payments" element={<ComingSoon title="Payments" />} />
+              <Route path="/client/profile" element={<ComingSoon title="Profile" />} />
+            </Route>
           </Route>
 
-        </Route>
-
-        {/* 
-          EXECUTION FLOW STEP 4b: The Client Layout
-          ---------------------------------------------------------
-          Clients get a completely different UI wrapper (Top Nav instead of Sidebar).
-        */}
-        <Route element={<ClientLayout />}>
-          {/* Client Routes */}
-          <Route element={<ProtectedRoute allowedRoles={['ROLE_CLIENT']} />}>
-            <Route path="/client/dashboard" element={<ClientDashboard />} />
-            <Route path="/client/auctions" element={<ClientAuctionsList />} />
-            <Route path="/client/auction/:id" element={<AuctionDetails />} />
-            <Route path="/client/player-pool" element={<PlayerPool />} />
-            <Route path="/client/payments" element={<PaymentsList />} />
-            <Route path="/client/profile" element={<ClientProfile />} />
-          </Route>
-        </Route>
-
-        {/* 
-          EXECUTION FLOW STEP 6: The Fallback
-          ---------------------------------------------------------
-          If the user types a URL that doesn't match any route above, 
-          they are aggressively redirected to the login page.
-        */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
+          {/* Fallback */}
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }

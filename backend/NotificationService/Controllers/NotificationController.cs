@@ -12,7 +12,6 @@ namespace NotificationService.Controllers
         private readonly IEmailService _emailService;
         private readonly IInAppNotificationService _inAppService;
         private readonly ILogger<NotificationController> _logger;
-
         public NotificationController(IEmailService emailService, IInAppNotificationService inAppService, ILogger<NotificationController> logger)
         {
             _emailService = emailService;

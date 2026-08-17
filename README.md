@@ -9,7 +9,6 @@
 
 - **Live Real-Time Bidding:** Powered by WebSockets to ensure sub-second bid latency and real-time dashboard updates for all participants.
 - **Secure Payment & Wallet System:** Dedicated integration for deposits, fee deductions, and wallet management using Razorpay.
-- **Event-Driven Notifications:** Asynchronous architecture handling in-app alerts and SMTP email notifications without blocking core logic.
 - **AI-Powered Assistant:** A built-in LLM assistant utilizing Retrieval-Augmented Generation (RAG) and FAISS vector search to help users navigate rules, platform overview, and account management.
 - **Microservices Architecture:** Fully decoupled backend services ensuring fault tolerance, independent scaling, and distinct domain logic.
 
@@ -30,7 +29,6 @@
 
 **Infrastructure & Databases**
 - **Databases:** MySQL (Primary Data), Redis (AI Session/Memory Caching)
-- **Message Broker:** RabbitMQ (Event-driven inter-service communication)
 - **Deployment:** Docker, Docker Compose, AWS EC2
 
 ---
@@ -42,8 +40,7 @@ The backend is composed of **5 distinct microservices** routed through a central
 1. **API Gateway (Node.js):** Acts as the single entry point for the frontend, validating JWTs and routing traffic to appropriate downstream services.
 2. **Core Service (Java/Spring Boot):** The heart of the platform. Manages auctions, player pools, teams, live websocket bidding, and core entities.
 3. **Payment Service (.NET):** Manages client wallets, transactions, and interfaces with the Razorpay API.
-4. **Notification Service (.NET):** Consumes RabbitMQ events to dispatch real-time in-app alerts and emails.
-5. **AI Service (Python/FastAPI):** Maintains a vectorized knowledge base (FAISS) and connects to LLMs to provide context-aware chat assistance.
+4. **AI Service (Python/FastAPI):** Maintains a vectorized knowledge base (FAISS) and connects to LLMs to provide context-aware chat assistance.
 
 ---
 

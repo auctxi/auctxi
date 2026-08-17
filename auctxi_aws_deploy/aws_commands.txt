@@ -1,0 +1,8 @@
+# Log back into AWS
+ssh -i your-key.pem ubuntu@<your-aws-public-ip>
+
+# Go to your project folder
+cd auctxi_aws_deploy
+
+# View the live logs
+docker-compose logs -f

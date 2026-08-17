@@ -3,9 +3,14 @@ import PageHeader from '../../../components/ui/PageHeader';
 import Card, { CardContent } from '../../../components/ui/Card';
 import Button from '../../../components/ui/Button';
 import { useNavigate } from 'react-router-dom';
+import { useAuctions } from '../../../hooks/useAuctions';
 
 const AuctionCreate = () => {
   const navigate = useNavigate();
+  const { createAuction } = useAuctions();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+
   const [formData, setFormData] = useState({
     name: '',
     type: 'mega',
@@ -25,11 +30,47 @@ const AuctionCreate = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Form data:', formData);
-    // Add logic to save auction
-    navigate('/admin/auctions');
+    setIsSubmitting(true);
+    setErrorMsg('');
+
+    try {
+      const payload = {
+        name: formData.name,
+        rules: {
+          initialPurse: formData.purseValue ? parseFloat(formData.purseValue) : 0,
+          bidTimerSeconds: formData.bidTimer ? parseInt(formData.bidTimer) : 30,
+          maxParticipatingTeams: formData.maxTeams ? parseInt(formData.maxTeams) : 10,
+          minSquadSize: formData.minPlayers ? parseInt(formData.minPlayers) : 15,
+          maxSquadSize: formData.maxPlayers ? parseInt(formData.maxPlayers) : 25,
+          autoSellTimeout: formData.retries ? parseInt(formData.retries) : 3,
+          minBidAmount: 50,
+          bidIncrement: 10,
+          maxOverseasPlayers: 4,
+          minBatsmen: 0,
+          minBowlers: 0,
+          minAllRounders: 0,
+          minWicketKeepers: 0,
+          nominationMethod: 'MANAGER_SELECTION',
+          registrationMode: 'MANAGER_APPROVAL',
+          allowLateRegistration: false,
+          allowUnsoldReentry: false,
+          allowOverseas: true,
+          allowUncapped: true,
+          allowRetired: true,
+          allowManagerCreatedPlayers: true
+        }
+      };
+      
+      await createAuction(payload);
+      navigate('/admin/auctions');
+    } catch (err) {
+      console.error("Submission failed:", err);
+      setErrorMsg(err.response?.data?.message || 'Failed to create auction. Please check your inputs.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const breadcrumbs = [
@@ -43,6 +84,13 @@ const AuctionCreate = () => {
         title="Create Auction" 
         breadcrumbs={breadcrumbs}
       />
+
+      {errorMsg && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
+          <strong className="font-bold">Error: </strong>
+          <span className="block sm:inline">{errorMsg}</span>
+        </div>
+      )}
 
       <Card>
         <CardContent className="pt-6">
@@ -205,11 +253,12 @@ const AuctionCreate = () => {
                 type="button" 
                 variant="outline"
                 onClick={() => navigate('/admin/auctions')}
+                disabled={isSubmitting}
               >
                 Cancel
               </Button>
-              <Button type="submit">
-                Save Auction
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Saving...' : 'Save Auction'}
               </Button>
             </div>
           </form>

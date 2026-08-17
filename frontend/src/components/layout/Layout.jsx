@@ -4,6 +4,7 @@ import Sidebar from './Sidebar';
 import Header from './Header';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import ChatWidget from '../ui/ChatWidget';
 
 /**
  * EXECUTION FLOW: The Layout Shell (Admin & Manager)
@@ -44,6 +45,7 @@ const Layout = () => {
 
       {/* Global Toast container for rendering popup notifications anywhere in the app */}
       <ToastContainer position="bottom-right" theme="light" />
+      <ChatWidget />
     </div>
   );
 };

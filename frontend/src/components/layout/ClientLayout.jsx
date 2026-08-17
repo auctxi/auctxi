@@ -4,6 +4,8 @@ import { IconBell, IconUser, IconShieldLock, IconLogout, IconSettings } from '@t
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useAuth } from '../../context/AuthContext';
+import { useNotifications } from '../../hooks/useNotifications';
+import ChatWidget from '../ui/ChatWidget';
 
 /**
  * EXECUTION FLOW: The Client Layout Shell
@@ -15,7 +17,8 @@ import { useAuth } from '../../context/AuthContext';
  * Just like Layout.jsx, the specific child page is injected into the <Outlet /> below.
  */
 const ClientLayout = () => {
-  const unreadCount = 2; // Static count for notifications
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+  const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const { logout, user } = useAuth();
   const navigate = useNavigate();
@@ -26,6 +29,7 @@ const ClientLayout = () => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
         setShowProfileMenu(false);
+        setShowNotifications(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -63,6 +67,8 @@ const ClientLayout = () => {
           {[
             { name: 'Home', path: '/client/dashboard' },
             { name: 'My Auctions', path: '/client/auctions' },
+            { name: 'Wallet', path: '/client/wallet' },
+            { name: 'Payments', path: '/client/payments' },
             { name: 'Profile', path: '/client/profile' }
           ].map((item) => (
             <NavLink
@@ -80,19 +86,80 @@ const ClientLayout = () => {
         </nav>
 
         {/* Right Side (Notifications & User) */}
-        <div className="flex items-center gap-4 md:gap-6">
-          <button className="relative text-gray-300 hover:text-white transition-colors focus:outline-none">
-            <IconBell size={24} />
-            {unreadCount > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-                {unreadCount}
-              </span>
-            )}
-          </button>
-          
-          <div className="relative" ref={menuRef}>
+        <div className="flex items-center gap-4 md:gap-6" ref={menuRef}>
+          <div className="relative">
             <button 
-              onClick={() => setShowProfileMenu(!showProfileMenu)}
+              onClick={() => {
+                setShowNotifications(!showNotifications);
+                setShowProfileMenu(false);
+              }}
+              className="relative text-gray-300 hover:text-white transition-colors focus:outline-none"
+            >
+              <IconBell size={24} />
+              {unreadCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+            
+            {showNotifications && (
+              <div className="absolute right-0 mt-3 w-80 max-h-96 overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-xl animate-in fade-in slide-in-from-top-2 duration-200 z-50">
+                <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white px-4 py-3">
+                  <h3 className="font-semibold text-gray-900">Notifications</h3>
+                  <button 
+                    onClick={markAllAsRead} 
+                    className="text-xs text-[#F59E0B] hover:underline font-medium"
+                  >
+                    Mark all read
+                  </button>
+                </div>
+                <div className="flex flex-col">
+                  {notifications.length > 0 ? (
+                    notifications.map(notif => (
+                      <div 
+                        key={notif.id} 
+                        onClick={() => {
+                          markAsRead(notif.id);
+                          if (notif.actionUrl) {
+                            setShowNotifications(false);
+                            let url = notif.actionUrl;
+                            if (url.includes('/client/auctions/') && !url.includes('?')) {
+                              url += '?tab=teams'; // Fallback logic if needed
+                            }
+                            navigate(url);
+                          }
+                        }}
+                        className={`p-4 border-b border-gray-50 cursor-pointer transition-colors hover:bg-gray-50 ${!notif.read ? 'bg-amber-50/30' : ''}`}
+                      >
+                        <div className="flex justify-between items-start mb-1">
+                          <p className={`text-sm ${!notif.read ? 'font-semibold text-gray-900' : 'font-medium text-gray-700'}`}>
+                            {notif.title}
+                          </p>
+                          {!notif.read && <span className="h-2 w-2 rounded-full bg-amber-500 mt-1"></span>}
+                        </div>
+                        <p className="text-xs text-gray-500">{notif.message}</p>
+                        <p className="text-[10px] text-gray-400 mt-2">
+                          {new Date(notif.createdAt).toLocaleString()}
+                        </p>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-8 text-center text-sm text-gray-500">
+                      You have no notifications.
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <div className="relative">
+            <button 
+              onClick={() => {
+                setShowProfileMenu(!showProfileMenu);
+                setShowNotifications(false);
+              }}
               className="flex h-10 w-10 items-center justify-center rounded-full bg-[#222222] border border-[#333333] text-gray-300 hover:bg-[#333333] transition-colors focus:outline-none focus:ring-2 focus:ring-[#F59E0B]"
             >
               <IconUser size={20} />
@@ -115,7 +182,7 @@ const ClientLayout = () => {
                     My Profile
                   </NavLink>
                   <button
-                    onClick={() => { setShowProfileMenu(false); alert("Settings coming soon!"); }}
+                    onClick={() => { setShowProfileMenu(false); navigate('/client/profile'); }}
                     className="flex items-center gap-2 w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 rounded-md transition-colors"
                   >
                     <IconSettings size={16} />
@@ -146,6 +213,7 @@ const ClientLayout = () => {
       </main>
 
       <ToastContainer position="bottom-right" theme="light" />
+      <ChatWidget />
     </div>
   );
 };

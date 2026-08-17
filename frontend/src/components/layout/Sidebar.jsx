@@ -69,7 +69,11 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           { name: 'Bids', path: '/manager/bids', icon: <IconCurrencyRupee size={20} /> },
           { name: 'Watchlist', path: '/manager/watchlist', icon: <IconStar size={20} /> },
           { name: 'Auctions', path: '/manager/auctions', icon: <IconGavel size={20} /> },
+          { name: 'Payments', path: '/manager/payments', icon: <IconReceipt2 size={20} /> },
+          { name: 'Applications', path: '/manager/applications', icon: <IconUserCog size={20} /> },
+          { name: 'Invitations', path: '/manager/invitations', icon: <IconBell size={20} /> },
           { name: 'Reports', path: '/manager/reports', icon: <IconReportAnalytics size={20} /> },
+          { name: 'Profile', path: '/manager/profile', icon: <IconUser size={20} /> },
           { name: 'Settings', path: '/manager/settings', icon: <IconSettings size={20} /> },
         ];
       case 'ROLE_CLIENT':

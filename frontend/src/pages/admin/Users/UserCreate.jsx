@@ -1,18 +1,41 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { api } from '../../../services/api';
+import { toast } from 'react-toastify';
 import PageHeader from '../../../components/ui/PageHeader';
 import { Card, CardHeader, CardTitle, CardContent } from '../../../components/ui/Card';
-import { Input } from '../../../components/ui/Input';
-import { Select } from '../../../components/ui/Select';
-import { Button } from '../../../components/ui/Button';
+import Button from '../../../components/ui/Button';
 
 export default function UserCreate() {
   const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    password: '',
+    role: 'client'
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleCancel = () => navigate('/admin/users');
-  const handleSubmit = (e) => {
+  
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    navigate('/admin/users');
+    setIsSubmitting(true);
+    try {
+      await api.post('/api/v1/users', formData);
+      toast.success('User created successfully');
+      navigate('/admin/users');
+    } catch (error) {
+      console.error('Failed to create user', error);
+      // The interceptor already shows a toast, so we don't need to duplicate it unless we want specific handling
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -29,57 +52,62 @@ export default function UserCreate() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Input 
-                label="Full Name" 
-                placeholder="Enter user's full name" 
-                required 
-              />
-              <Input 
-                type="email" 
-                label="Email Address" 
-                placeholder="Enter email address" 
-                required 
-              />
-              <Input 
-                type="password" 
-                label="Password" 
-                placeholder="Create a password" 
-                required 
-              />
-              <Select 
-                label="Role" 
-                options={[
-                  { label: 'Admin', value: 'admin' },
-                  { label: 'Auctioneer', value: 'auctioneer' },
-                  { label: 'Team Owner', value: 'team_owner' },
-                  { label: 'Viewer', value: 'viewer' }
-                ]}
-                placeholder="Select user role"
-                required
-              />
-              <Select 
-                label="Team Assignment (Optional)" 
-                options={[
-                  { label: 'Mumbai Indians', value: 'mi' },
-                  { label: 'Chennai Super Kings', value: 'csk' },
-                  { label: 'Royal Challengers Bangalore', value: 'rcb' },
-                ]}
-                placeholder="Select team"
-              />
-              <Select 
-                label="Status" 
-                options={[
-                  { label: 'Active', value: 'active' },
-                  { label: 'Inactive', value: 'inactive' },
-                  { label: 'Blocked', value: 'blocked' }
-                ]}
-                defaultValue="active"
-                required
-              />
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">Username *</label>
+                <input 
+                  type="text"
+                  name="username"
+                  required
+                  value={formData.username}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500 outline-none transition-colors"
+                  placeholder="Enter username" 
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">Email Address *</label>
+                <input 
+                  type="email"
+                  name="email"
+                  required
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500 outline-none transition-colors"
+                  placeholder="Enter email address" 
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">Password *</label>
+                <input 
+                  type="password"
+                  name="password"
+                  required
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500 outline-none transition-colors"
+                  placeholder="Create a password" 
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">Role *</label>
+                <select 
+                  name="role"
+                  required
+                  value={formData.role}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500 outline-none transition-colors bg-white"
+                >
+                  <option value="admin">Admin</option>
+                  <option value="manager">Auction Manager</option>
+                  <option value="client">Client</option>
+                </select>
+              </div>
             </div>
             <div className="flex justify-end gap-3 pt-4">
-              <Button variant="outline" type="button" onClick={handleCancel}>Cancel</Button>
-              <Button variant="primary" type="submit">Create User</Button>
+              <Button variant="outline" type="button" onClick={handleCancel} disabled={isSubmitting}>Cancel</Button>
+              <Button variant="primary" type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Creating...' : 'Create User'}
+              </Button>
             </div>
           </form>
         </CardContent>

@@ -11,14 +11,19 @@ const PageHeader = ({
   breadcrumbs = [],
   actionLabel,
   actionIcon: ActionIcon,
+  actionPath,
   onAction,
   notificationCount = 0,
-  showDatePicker = true,
-  showNotification = true,
-  date = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+  showDatePicker = false,
+  showNotification = false,
+  date,
+  onDateChange,
+  className = "mb-6",
 }) => {
+  const defaultDate = new Date().toISOString().split('T')[0];
+  const displayDate = date !== undefined ? date : defaultDate;
   return (
-    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between mb-6">
+    <div className={`flex flex-col gap-4 sm:gap-8 sm:flex-row sm:items-center sm:justify-between ${className}`}>
       {/* Left — Title & Breadcrumbs */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-gray-900">{title}</h1>
@@ -43,11 +48,12 @@ const PageHeader = ({
       {/* Right — Date, Notifications, Action */}
       <div className="flex items-center gap-3 mt-3 sm:mt-0">
         {showDatePicker && (
-          <button className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm">
-            <IconCalendar size={16} className="text-gray-500" />
-            <span>{date}</span>
-            <IconChevronDown size={14} className="text-gray-400" />
-          </button>
+          <input
+            type="date"
+            value={displayDate.match(/^\d{4}-\d{2}-\d{2}$/) ? displayDate : ''}
+            onChange={(e) => onDateChange && onDateChange(e.target.value)}
+            className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-[#f59e0b] cursor-pointer"
+          />
         )}
 
         {showNotification && (
@@ -61,15 +67,24 @@ const PageHeader = ({
           </button>
         )}
 
-        {actionLabel && (
+        {actionLabel && actionPath ? (
+          <Link
+            to={actionPath}
+            className="flex items-center gap-2 rounded-lg bg-[#111111] px-4 py-2 text-sm font-medium text-white hover:bg-[#222222] transition-colors shadow-sm"
+          >
+            {ActionIcon && <ActionIcon size={16} />}
+            {actionLabel}
+          </Link>
+        ) : actionLabel ? (
           <button
+            type="button"
             onClick={onAction}
             className="flex items-center gap-2 rounded-lg bg-[#111111] px-4 py-2 text-sm font-medium text-white hover:bg-[#222222] transition-colors shadow-sm"
           >
             {ActionIcon && <ActionIcon size={16} />}
             {actionLabel}
           </button>
-        )}
+        ) : null}
       </div>
     </div>
   );

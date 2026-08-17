@@ -87,4 +87,3 @@ const SearchFilterBar = ({
 
 export default SearchFilterBar;
 // Vite HMR Refresh
-// Vite HMR Refresh

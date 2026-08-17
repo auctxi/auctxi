@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "./styles/design-tokens.css";
+@plugin "@tailwindcss/typography";
 
 @theme {
   --color-brand: #f59e0b; /* Beautiful Amber/Gold */

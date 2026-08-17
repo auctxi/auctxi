@@ -47,10 +47,24 @@ const Signup = () => {
           <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-[#f59e0b] blur-[120px]" />
         </div>
         
-        <div className="relative z-10 flex items-center gap-3">
-          <IconShieldLock className="h-10 w-10 text-[#f59e0b]" />
-          <span className="text-3xl font-bold tracking-tight text-white">AuctXI</span>
-        </div>
+        <Link to="/" className="relative z-10 flex items-center gap-3 md:gap-4 hover:opacity-90 transition-opacity">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#1a1a1a] shadow-[0_0_15px_rgba(245,158,11,0.3)] border border-[#2a2a2a]">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 3a12 12 0 0 0 8.5 3a12 12 0 0 1 -8.5 15a12 12 0 0 1 -8.5 -15a12 12 0 0 0 8.5 -3" />
+              <path d="M12 11a1 1 0 1 0 0 -2a1 1 0 0 0 0 2z" />
+              <path d="M12 11v2.5" />
+            </svg>
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="text-4xl font-bold tracking-tight text-[#f59e0b]">
+              Auct<span className="text-white">XI</span>
+            </span>
+            <div className="hidden sm:block h-8 w-[2px] bg-[#333333]"></div>
+            <span className="hidden sm:block text-sm font-bold tracking-[0.25em] text-[#6b7280]">
+              BID. BUILD. WIN.
+            </span>
+          </div>
+        </Link>
         <div className="relative z-10 mb-20 max-w-lg">
           <h1 className="text-4xl font-bold text-white leading-tight">
             Join the <span className="text-[#f59e0b]">Elite Network</span>

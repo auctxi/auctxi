@@ -7,56 +7,67 @@ import DataTable from '../../../components/ui/DataTable';
 import Pagination from '../../../components/ui/Pagination';
 import StatusBadge from '../../../components/ui/StatusBadge';
 import ActionMenu from '../../../components/ui/ActionMenu';
-
-const MOCK_TEAMS = [
-  { id: '1', name: 'Chennai Super Kings', abbreviation: 'CSK', players: 25, auctionsJoined: 5, status: 'Active', createdOn: '2023-01-15' },
-  { id: '2', name: 'Mumbai Indians', abbreviation: 'MI', players: 24, auctionsJoined: 5, status: 'Active', createdOn: '2023-01-16' },
-  { id: '3', name: 'Royal Challengers Bangalore', abbreviation: 'RCB', players: 22, auctionsJoined: 5, status: 'Active', createdOn: '2023-01-17' },
-  { id: '4', name: 'Delhi Capitals', abbreviation: 'DC', players: 23, auctionsJoined: 5, status: 'Inactive', createdOn: '2023-01-18' },
-];
+import { useTeams } from '../../../hooks/useTeams';
 
 export default function TeamsList() {
   const navigate = useNavigate();
+  const { teams, loading, error } = useTeams();
+
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
+  const itemsPerPage = 10;
 
+  // Filter teams
+  const filteredTeams = teams.filter(team => 
+    team.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    (team.abbreviation && team.abbreviation.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
+  // Pagination
+  const totalPages = Math.ceil(filteredTeams.length / itemsPerPage);
+  const paginatedTeams = filteredTeams.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // KPI Calculations
   const kpis = [
-    { title: 'Total Teams', value: '10' },
-    { title: 'Active Teams', value: '8' },
-    { title: 'Inactive Teams', value: '2' },
-    { title: 'Total Players', value: '240' },
+    { title: 'Total Teams', value: teams.length.toString() },
+    { title: 'Active Teams', value: teams.length.toString() }, // Placeholder until status is tracked
+    { title: 'Inactive Teams', value: '0' },
+    { title: 'Total Players', value: teams.reduce((acc, team) => acc + (team.players?.length || 0), 0).toString() },
   ];
+
   const columns = [
     {
       key: 'name',
       header: 'Team Name',
-      render: (item) => (
+      render: (_, item) => (
         <div className="flex items-center gap-3">
           <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500">
-            {item.abbreviation}
+            {item.abbreviation || item?.name?.charAt(0) || '?'}
           </div>
-          <span className="font-medium text-gray-900">{item.name}</span>
+          <span className="font-medium text-gray-900">{item?.name || 'Unnamed'}</span>
         </div>
       ),
     },
-    { key: 'abbreviation', header: 'Abbreviation' },
-    { key: 'players', header: 'Players' },
-    { key: 'auctionsJoined', header: 'Auctions Joined' },
+    { key: 'abbreviation', header: 'Abbreviation', render: (_, item) => item.abbreviation || '-' },
+    { key: 'remainingPurse', header: 'Purse', render: (_, item) => `₹${item.remainingPurse || 0}` },
+    { key: 'players', header: 'Players', render: (_, item) => item.players?.length || 0 },
     {
       key: 'status',
       header: 'Status',
-      render: (item) => <StatusBadge status={item.status} />,
+      render: (_, item) => <StatusBadge status="Active" label="Active" />,
     },
-    { key: 'createdOn', header: 'Created On' },
+    { key: 'createdOn', header: 'Created On', render: (_, item) => item.createdAt ? new Date(item.createdAt).toLocaleDateString() : '-' },
     {
       key: 'actions',
       header: 'Action',
-      render: (item) => (
+      render: (_, item) => (
         <ActionMenu
           actions={[
             { label: 'View Details', onClick: () => navigate(`/admin/teams/${item.id}`) },
-            { label: 'Edit', onClick: () => console.log('Edit', item.id) },
-            { label: 'Delete', onClick: () => console.log('Delete', item.id), danger: true },
+            { label: 'Edit', onClick: () => navigate(`/admin/teams/edit/${item.id}`) },
           ]}
         />
       ),
@@ -80,45 +91,37 @@ export default function TeamsList() {
         <SearchFilterBar
           searchPlaceholder="Search teams by name or abbreviation..."
           searchValue={searchQuery}
-          onSearchChange={setSearchQuery}
-          filters={[
-            {
-              id: 'status',
-              label: 'Status',
-              options: [
-                { value: 'all', label: 'All Statuses' },
-                { value: 'active', label: 'Active' },
-                { value: 'inactive', label: 'Inactive' },
-              ],
-            },
-            {
-              id: 'auction',
-              label: 'Auction',
-              options: [
-                { value: 'all', label: 'All Auctions' },
-                { value: 'ipl2024', label: 'IPL 2024' },
-                { value: 'wpl2024', label: 'WPL 2024' },
-              ],
-            }
-          ]}
+          onSearchChange={(val) => { setSearchQuery(val); setCurrentPage(1); }}
+          filters={[]}
           onFilterChange={(filterId, value) => console.log(filterId, value)}
         />
       </div>
+
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <DataTable
-          columns={columns}
-          data={MOCK_TEAMS}
-          keyExtractor={(item) => item.id}
-        />
+        {loading ? (
+          <div className="p-8 text-center text-gray-500">Loading teams...</div>
+        ) : error ? (
+          <div className="p-8 text-center text-red-500">{error}</div>
+        ) : paginatedTeams.length === 0 ? (
+          <div className="p-8 text-center text-gray-500">No teams found.</div>
+        ) : (
+          <DataTable
+            columns={columns}
+            data={paginatedTeams}
+            keyExtractor={(item) => item.id}
+          />
+        )}
       </div>
 
-      <Pagination
-        currentPage={currentPage}
-        totalPages={1}
-        onPageChange={setCurrentPage}
-        totalItems={MOCK_TEAMS.length}
-        itemsPerPage={10}
-      />
+      {!loading && paginatedTeams.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages || 1}
+          onPageChange={setCurrentPage}
+          totalItems={filteredTeams.length}
+          itemsPerPage={itemsPerPage}
+        />
+      )}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PageHeader from '../../../components/ui/PageHeader';
 import KPICardRow from '../../../components/ui/KPICardRow';
 import KPICard from '../../../components/ui/KPICard';
@@ -9,16 +9,7 @@ import Pagination from '../../../components/ui/Pagination';
 import Button from '../../../components/ui/Button';
 import { IconTrophy, IconCalendarEvent, IconLivePhoto, IconCheck } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
-
-const mockAuctionsData = [
-  { id: 1, name: 'IPL 2026 Mega Auction', type: 'Mega Auction', datetime: '2026-08-15 10:00', teams: 10, status: 'upcoming', totalBids: 0, highestBid: '-' },
-  { id: 2, name: 'WPL 2026 Mini Auction', type: 'Mini Auction', datetime: '2026-07-24 14:00', teams: 5, status: 'live', totalBids: 452, highestBid: '₹4.2 Cr' },
-  { id: 3, name: 'BBL 2026 Draft', type: 'Draft', datetime: '2026-07-20 18:00', teams: 8, status: 'completed', totalBids: 890, highestBid: '$1.2M' },
-  { id: 4, name: 'PSL 2026 Draft', type: 'Draft', datetime: '2026-06-10 15:00', teams: 6, status: 'completed', totalBids: 620, highestBid: '$800K' },
-  { id: 5, name: 'SA20 2026 Auction', type: 'Auction', datetime: '2026-09-05 11:00', teams: 6, status: 'upcoming', totalBids: 0, highestBid: '-' },
-  { id: 6, name: 'CPL 2026 Draft', type: 'Draft', datetime: '2026-09-15 09:00', teams: 6, status: 'upcoming', totalBids: 0, highestBid: '-' },
-  { id: 7, name: 'The Hundred 2026 Draft', type: 'Draft', datetime: '2026-03-20 14:00', teams: 8, status: 'completed', totalBids: 750, highestBid: '£125K' },
-];
+import { useAuctions } from '../../../hooks/useAuctions';
 
 const filterOptions = [
   {
@@ -30,21 +21,17 @@ const filterOptions = [
       { value: 'upcoming', label: 'Upcoming' },
       { value: 'completed', label: 'Completed' },
     ]
-  },
-  {
-    name: 'type',
-    label: 'Auction Type',
-    options: [
-      { value: 'all', label: 'All Types' },
-      { value: 'mega', label: 'Mega Auction' },
-      { value: 'mini', label: 'Mini Auction' },
-      { value: 'draft', label: 'Draft' },
-    ]
   }
 ];
 
 const AuctionsList = () => {
   const navigate = useNavigate();
+  const { auctions, loading, error } = useAuctions();
+  
+  // Local state for search and pagination (can be moved to custom hooks later)
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const handleAction = (id) => {
     navigate(`/admin/auctions/${id}`);
@@ -52,16 +39,12 @@ const AuctionsList = () => {
 
   const columns = [
     { header: 'Auction Name', accessorKey: 'name' },
-    { header: 'Type', accessorKey: 'type' },
-    { header: 'Date & Time', accessorKey: 'datetime' },
-    { header: 'Teams', accessorKey: 'teams' },
+    { header: 'Date & Time', accessorKey: 'createdAt', cell: ({ row }) => new Date(row.original.createdAt).toLocaleString() },
     { 
       header: 'Status', 
       accessorKey: 'status',
-      cell: ({ row }) => <StatusBadge status={row.original.status} />
+      cell: ({ row }) => <StatusBadge status={row.original.status?.toLowerCase()} />
     },
-    { header: 'Total Bids', accessorKey: 'totalBids' },
-    { header: 'Highest Bid', accessorKey: 'highestBid' },
     {
       header: 'Action',
       id: 'actions',
@@ -77,33 +60,48 @@ const AuctionsList = () => {
     }
   ];
 
+  // Filtering
+  const filteredAuctions = auctions.filter(auction => 
+    auction.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Pagination
+  const totalPages = Math.ceil(filteredAuctions.length / itemsPerPage);
+  const paginatedAuctions = filteredAuctions.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // KPI Calculations
+  const liveCount = auctions.filter(a => a.status === 'ONGOING').length;
+  const upcomingCount = auctions.filter(a => a.status === 'UPCOMING').length;
+  const completedCount = auctions.filter(a => a.status === 'COMPLETED').length;
+
   return (
     <div className="space-y-6">
       <PageHeader 
         title="Auctions" 
-        actionLabel="+ Create Auction"
-        onAction={() => navigate('/admin/auctions/create')}
       />
 
       <KPICardRow>
         <KPICard
           title="Total Auctions"
-          value="142"
+          value={auctions.length.toString()}
           icon={<IconTrophy className="w-5 h-5" />}
         />
         <KPICard
           title="Live Auctions"
-          value="1"
+          value={liveCount.toString()}
           icon={<IconLivePhoto className="w-5 h-5 text-red-500" />}
         />
         <KPICard
           title="Upcoming Auctions"
-          value="3"
+          value={upcomingCount.toString()}
           icon={<IconCalendarEvent className="w-5 h-5 text-amber-500" />}
         />
         <KPICard
           title="Completed Auctions"
-          value="138"
+          value={completedCount.toString()}
           icon={<IconCheck className="w-5 h-5 text-emerald-500" />}
         />
       </KPICardRow>
@@ -113,23 +111,33 @@ const AuctionsList = () => {
           <SearchFilterBar 
             placeholder="Search auctions..." 
             filters={filterOptions}
-            onSearch={(val) => console.log('Search:', val)}
+            onSearch={(val) => { setSearchTerm(val); setCurrentPage(1); }}
             onFilterChange={(filters) => console.log('Filters:', filters)}
           />
         </div>
         
-        <DataTable 
-          data={mockAuctionsData}
-          columns={columns}
-        />
-        
-        <div className="p-4 border-t border-gray-200">
-          <Pagination 
-            currentPage={1}
-            totalPages={10}
-            onPageChange={(page) => console.log('Page:', page)}
+        {loading ? (
+          <div className="p-8 text-center text-gray-500">Loading auctions...</div>
+        ) : error ? (
+          <div className="p-8 text-center text-red-500">{error}</div>
+        ) : paginatedAuctions.length === 0 ? (
+          <div className="p-8 text-center text-gray-500">No auctions found.</div>
+        ) : (
+          <DataTable 
+            data={paginatedAuctions}
+            columns={columns}
           />
-        </div>
+        )}
+        
+        {!loading && paginatedAuctions.length > 0 && (
+          <div className="p-4 border-t border-gray-200">
+            <Pagination 
+              currentPage={currentPage}
+              totalPages={totalPages || 1}
+              onPageChange={(page) => setCurrentPage(page)}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

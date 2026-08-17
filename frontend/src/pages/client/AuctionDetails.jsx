@@ -1,48 +1,81 @@
-import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
-import { IconInfoCircle, IconUsers, IconGavel, IconList, IconTrophy, IconClock, IconMapPin, IconCoinRupee } from '@tabler/icons-react';
+import KPICard from '../../components/ui/KPICard';
+import { IconInfoCircle, IconUsers, IconGavel, IconList, IconTrophy, IconClock, IconMapPin, IconCoinRupee, IconHistory, IconWallet } from '@tabler/icons-react';
 import { cn } from '../../utils/cn';
-
-const mockAuctionData = {
-  id: 'a1',
-  name: 'Premier Corporate League 2026',
-  status: 'LIVE',
-  startTime: '2026-07-25T10:00:00Z',
-  totalTeams: 8,
-  teamsJoined: 8,
-  type: 'Corporate',
-  location: 'Mumbai, India',
-  startingPrice: 100000000,
-  rules: [
-    "Base price for category A is ₹10L",
-    "Maximum 15 players per squad",
-    "Minimum 2 overseas players",
-    "Right to match (RTM) card limit: 1"
-  ]
-};
+import { useAuctions } from '../../hooks/useAuctions';
+import { useTeams } from '../../hooks/useTeams';
+import { useAuth } from '../../context/AuthContext';
+import DataTable from '../../components/ui/DataTable';
+import ClientPlayersTab from './components/ClientPlayersTab';
+import ClientCreateTeamTab from './components/ClientCreateTeamTab';
+import { api } from '../../services/api';
 
 const AuctionDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { fetchAuctionById, myApplications } = useAuctions();
+  const { teams } = useTeams();
+  
+  const [auction, setAuction] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+  const [hasPaid, setHasPaid] = useState(false);
 
-  const auction = mockAuctionData; // In real app, fetch by id
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const data = await fetchAuctionById(id);
+        setAuction(data);
+      } catch (e) {
+        console.error("Failed to load auction details", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, [id, fetchAuctionById]);
+
+  // Find the client's team for this specific auction
+  const myTeam = teams.find(t => t.auctionId === id && t.owner?.id === user?.id);
+  const myApplication = myApplications?.find(app => app.auctionId === id);
+
+  useEffect(() => {
+    const checkPayment = async () => {
+      if (myTeam && user?.id) {
+        try {
+          const res = await api.get(`/api/v1/payments/client/${user.id}/auction/${id}/status`);
+          setHasPaid(res.data.hasPaid);
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    };
+    checkPayment();
+  }, [myTeam, user, id]);
+
+  const teamStatusText = myTeam 
+    ? (hasPaid ? myTeam.name : `${myTeam.name} (Unpaid)`)
+    : (myApplication ? `Application ${myApplication.status}` : 'Not Participating');
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
-      maximumSignificantDigits: 3
+      maximumFractionDigits: 0
     }).format(amount);
   };
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: <IconInfoCircle size={18} /> },
-    { id: 'squad', label: 'My Squad', icon: <IconUsers size={18} /> },
+    { id: 'squad', label: 'My Squad & Bids', icon: <IconUsers size={18} /> },
+    { id: 'players', label: 'Players', icon: <IconList size={18} /> },
     { id: 'live', label: 'Live Bid', icon: <IconGavel size={18} /> },
-    { id: 'rules', label: 'Rules', icon: <IconList size={18} /> },
+    { id: 'create-team', label: 'Team Setup', icon: <IconUsers size={18} /> },
     { id: 'leaderboard', label: 'Leaderboard', icon: <IconTrophy size={18} /> }
   ];
 
@@ -64,7 +97,11 @@ const AuctionDetails = () => {
                       </div>
                       <div>
                         <p className="text-xs text-gray-500 font-medium">Start Time</p>
-                        <p className="text-sm font-semibold text-gray-900">25 Jul 2026, 10:00 AM</p>
+                        <p className="text-sm font-semibold text-gray-900">
+                          {auction.status === 'UPCOMING' 
+                            ? (auction.scheduledStartTime ? new Date(auction.scheduledStartTime).toLocaleString() : 'TBA')
+                            : (auction.startTime ? new Date(auction.startTime).toLocaleString() : 'TBA')}
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
@@ -72,8 +109,8 @@ const AuctionDetails = () => {
                         <IconMapPin size={20} />
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500 font-medium">Location</p>
-                        <p className="text-sm font-semibold text-gray-900">{auction.location}</p>
+                        <p className="text-xs text-gray-500 font-medium">Status</p>
+                        <p className="text-sm font-semibold text-gray-900">{auction.status}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
@@ -81,8 +118,8 @@ const AuctionDetails = () => {
                         <IconUsers size={20} />
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500 font-medium">Teams</p>
-                        <p className="text-sm font-semibold text-gray-900">{auction.teamsJoined} / {auction.totalTeams} Joined</p>
+                        <p className="text-xs text-gray-500 font-medium">My Team Status</p>
+                        <p className="text-sm font-semibold text-gray-900">{teamStatusText}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
@@ -91,21 +128,9 @@ const AuctionDetails = () => {
                       </div>
                       <div>
                         <p className="text-xs text-gray-500 font-medium">Base Purse</p>
-                        <p className="text-sm font-semibold text-gray-900">{formatCurrency(auction.startingPrice)}</p>
+                        <p className="text-sm font-semibold text-gray-900">{formatCurrency(auction.auctionRules?.initialPurse || 0)}</p>
                       </div>
                     </div>
-                  </div>
-                  
-                  <div className="mt-6">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-3">Key Rules</h3>
-                    <ul className="space-y-2">
-                      {auction.rules.map((rule, idx) => (
-                        <li key={idx} className="flex items-start gap-2 text-sm text-gray-600">
-                          <span className="mt-1 w-1.5 h-1.5 bg-[#f59e0b] rounded-full flex-shrink-0"></span>
-                          {rule}
-                        </li>
-                      ))}
-                    </ul>
                   </div>
                 </CardContent>
               </Card>
@@ -117,11 +142,17 @@ const AuctionDetails = () => {
                   <CardTitle>Quick Actions</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <Button variant="black" className="w-full justify-center" onClick={() => setActiveTab('live')}>
+                  {myTeam && !hasPaid ? (
+                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800 text-center mb-2">
+                      <p>You must pay the Purse Value Amount to enter the Live Bid Room.</p>
+                      <Button variant="link" className="text-amber-900 font-bold p-0 h-auto hover:text-amber-700 hover:underline transition-colors" onClick={() => setActiveTab('create-team')}>Go to Team Setup</Button>
+                    </div>
+                  ) : null}
+                  <Button variant="black" className="w-full justify-center" onClick={() => setActiveTab('live')} disabled={auction.status !== 'ONGOING' || (myTeam && !hasPaid)}>
                     Enter Live Auction
                   </Button>
                   <Button variant="outline" className="w-full justify-center" onClick={() => setActiveTab('squad')}>
-                    Manage Squad
+                    View My Squad
                   </Button>
                 </CardContent>
               </Card>
@@ -130,38 +161,74 @@ const AuctionDetails = () => {
         );
       
       case 'squad':
+        if (!myTeam) {
+           return (
+            <div className="p-12 text-center text-gray-500 bg-white rounded-xl shadow-sm border border-gray-100">
+              <p>You do not have a team registered for this auction.</p>
+            </div>
+           );
+        }
         return (
-          <div className="p-12 text-center text-gray-500 bg-white rounded-xl shadow-sm border border-gray-100 animate-in fade-in">
-            <IconUsers size={48} className="mx-auto mb-4 text-gray-300" />
-            <h3 className="text-lg font-semibold text-gray-900">My Squad</h3>
-            <p className="max-w-md mx-auto mt-2">Your team roster and remaining purse details will appear here.</p>
+          <div className="space-y-6 animate-in fade-in">
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                 <KPICard title="Total Budget" value={formatCurrency(myTeam.totalBudget)} icon={<IconCoinRupee/>} />
+                 <KPICard title="Remaining Purse" value={formatCurrency(myTeam.remainingPurse)} icon={<IconWallet/>} />
+             </div>
+             <Card>
+                <CardHeader>
+                    <CardTitle>Roster Details</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <DataTable 
+                        columns={[
+                            { header: 'Name', accessorKey: 'name' },
+                            { header: 'Role', accessorKey: 'role' },
+                            { header: 'Category', accessorKey: 'category' },
+                            { header: 'Winning Bid', accessorKey: 'basePrice' } 
+                        ]}
+                        data={myTeam.players || []}
+                    />
+                </CardContent>
+             </Card>
           </div>
         );
+
+      case 'players':
+        return <ClientPlayersTab auctionId={id} />;
 
       case 'live':
         return (
           <div className="p-12 text-center text-gray-500 bg-white rounded-xl shadow-sm border border-gray-100 animate-in fade-in">
             <IconGavel size={48} className="mx-auto mb-4 text-[#f59e0b]" />
             <h3 className="text-lg font-semibold text-gray-900">Live Bid Room</h3>
-            <p className="max-w-md mx-auto mt-2">The real-time bidding interface is currently under construction for this phase.</p>
+            <p className="max-w-md mx-auto mt-2 text-sm mb-4">You are about to enter the Live Bidding Room.</p>
+            <Button onClick={() => navigate(`/client/live-auction/${auction.id}`)}>Connect to WebSockets</Button>
           </div>
         );
 
-      case 'rules':
-        return (
-          <div className="p-12 text-center text-gray-500 bg-white rounded-xl shadow-sm border border-gray-100 animate-in fade-in">
-            <IconList size={48} className="mx-auto mb-4 text-gray-300" />
-            <h3 className="text-lg font-semibold text-gray-900">Auction Rules</h3>
-            <p className="max-w-md mx-auto mt-2">Comprehensive rulebook and guidelines for participants.</p>
-          </div>
-        );
+      case 'create-team':
+        return <ClientCreateTeamTab auctionId={id} myTeam={myTeam} myApplication={myApplication} />;
 
       case 'leaderboard':
+        const participatingTeams = teams.filter(t => t.auctionId === id);
         return (
-          <div className="p-12 text-center text-gray-500 bg-white rounded-xl shadow-sm border border-gray-100 animate-in fade-in">
-            <IconTrophy size={48} className="mx-auto mb-4 text-gray-300" />
-            <h3 className="text-lg font-semibold text-gray-900">Leaderboard</h3>
-            <p className="max-w-md mx-auto mt-2">Current standings, top bids, and team budget rankings.</p>
+          <div className="space-y-4 animate-in fade-in">
+             <Card>
+                <CardHeader>
+                    <CardTitle>Auction Leaderboard</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <DataTable 
+                        columns={[
+                            { header: 'Team Name', accessorKey: 'name' },
+                            { header: 'Owner', accessorKey: 'owner.name' },
+                            { header: 'Players Bought', accessorKey: 'players.length' },
+                            { header: 'Remaining Purse', accessorKey: 'remainingPurse', cell: ({row}) => formatCurrency(row.original.remainingPurse) }
+                        ]}
+                        data={participatingTeams}
+                    />
+                </CardContent>
+             </Card>
           </div>
         );
 
@@ -169,6 +236,9 @@ const AuctionDetails = () => {
         return null;
     }
   };
+
+  if (loading) return <div className="p-12 text-center text-gray-500">Loading auction details...</div>;
+  if (!auction) return <div className="p-12 text-center text-red-500">Failed to load auction.</div>;
 
   return (
     <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 space-y-6">
@@ -182,19 +252,20 @@ const AuctionDetails = () => {
         
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-2">
-            <Badge variant={auction.status === 'LIVE' ? 'success' : 'default'} className="uppercase">
+            <Badge variant={auction.status === 'ONGOING' ? 'success' : 'default'} className="uppercase">
               {auction.status}
             </Badge>
-            <span className="text-sm font-medium text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
-              {auction.type}
-            </span>
           </div>
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{auction.name}</h1>
         </div>
         
         <div className="relative z-10 text-left md:text-right">
-          <p className="text-sm text-gray-500 font-medium">Starting On</p>
-          <p className="text-lg font-semibold text-gray-900">25 Jul 2026, 10:00 AM</p>
+          <p className="text-sm text-gray-500 font-medium">Starts On</p>
+          <p className="text-lg font-semibold text-gray-900">
+            {auction.status === 'UPCOMING'
+              ? (auction.scheduledStartTime ? new Date(auction.scheduledStartTime).toLocaleDateString() : 'TBA')
+              : (auction.startTime ? new Date(auction.startTime).toLocaleDateString() : 'TBA')}
+          </p>
         </div>
       </div>
 

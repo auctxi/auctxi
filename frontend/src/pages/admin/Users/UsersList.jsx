@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { api } from '../../../services/api';
 import PageHeader from '../../../components/ui/PageHeader';
 import KPICardRow from '../../../components/ui/KPICardRow';
 import KPICard from '../../../components/ui/KPICard';
@@ -10,18 +11,26 @@ import Badge from '../../../components/ui/Badge';
 import Button from '../../../components/ui/Button';
 import { IconUsers, IconUserCheck, IconUserX, IconUserMinus, IconEye, IconEdit, IconTrash } from '@tabler/icons-react';
 
-const mockUsers = [
-  { id: '1', name: 'John Doe', email: 'john@example.com', role: 'Team Owner', team: 'Mumbai Indians', status: 'Active', joinedOn: '2025-01-15' },
-  { id: '2', name: 'Jane Smith', email: 'jane@example.com', role: 'Auctioneer', team: '-', status: 'Active', joinedOn: '2025-01-20' },
-  { id: '3', name: 'Bob Wilson', email: 'bob@example.com', role: 'Team Owner', team: 'Chennai Super Kings', status: 'Inactive', joinedOn: '2025-02-01' },
-  { id: '4', name: 'Alice Brown', email: 'alice@example.com', role: 'Viewer', team: '-', status: 'Blocked', joinedOn: '2025-02-10' },
-  { id: '5', name: 'Charlie Davis', email: 'charlie@example.com', role: 'Team Owner', team: 'Royal Challengers Bangalore', status: 'Active', joinedOn: '2025-02-15' },
-];
-
 export default function UsersList() {
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await api.get('/api/v1/users');
+        setUsers(response.data?.content || response.data || []);
+      } catch (error) {
+        console.error("Failed to fetch users", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUsers();
+  }, []);
 
   const handleAddUser = () => navigate('/admin/users/create');
 
@@ -29,12 +38,11 @@ export default function UsersList() {
     { header: 'User Name', accessorKey: 'name' },
     { header: 'Email', accessorKey: 'email' },
     { header: 'Role', accessorKey: 'role' },
-    { header: 'Team', accessorKey: 'team' },
     { 
       header: 'Status', 
       accessorKey: 'status',
       cell: ({ row }) => {
-        const status = row.original.status;
+        const status = row.original.status || 'Active';
         let variant = 'default';
         if (status === 'Active') variant = 'success';
         else if (status === 'Inactive') variant = 'warning';
@@ -42,50 +50,10 @@ export default function UsersList() {
         return <Badge variant={variant}>{status}</Badge>;
       }
     },
-    { header: 'Joined On', accessorKey: 'joinedOn' },
-    {
-      header: 'Action',
-      id: 'actions',
-      cell: ({ row }) => (
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" icon={<IconEye size={16} />} aria-label="View user" />
-          <Button variant="ghost" size="sm" icon={<IconEdit size={16} />} aria-label="Edit user" />
-          <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600" icon={<IconTrash size={16} />} aria-label="Delete user" />
-        </div>
-      )
-    }
+    { header: 'Joined On', accessorKey: 'createdAt', cell: ({ row }) => new Date(row.original.createdAt).toLocaleDateString() },
   ];
 
-  const filters = [
-    {
-      name: 'role',
-      placeholder: 'All Roles',
-      options: [
-        { label: 'Admin', value: 'admin' },
-        { label: 'Auctioneer', value: 'auctioneer' },
-        { label: 'Team Owner', value: 'team_owner' },
-        { label: 'Viewer', value: 'viewer' },
-      ]
-    },
-    {
-      name: 'status',
-      placeholder: 'All Statuses',
-      options: [
-        { label: 'Active', value: 'active' },
-        { label: 'Inactive', value: 'inactive' },
-        { label: 'Blocked', value: 'blocked' },
-      ]
-    },
-    {
-      name: 'joinedDate',
-      placeholder: 'Joined Date',
-      options: [
-        { label: 'Last 7 Days', value: '7d' },
-        { label: 'Last 30 Days', value: '30d' },
-        { label: 'This Year', value: '1y' },
-      ]
-    }
-  ];
+  const activeUsers = users.filter(u => u.status !== 'Blocked' && u.status !== 'Inactive').length;
 
   return (
     <div className="space-y-6">
@@ -97,32 +65,18 @@ export default function UsersList() {
       />
 
       <KPICardRow>
-        <KPICard title="Total Users" value="1,245" icon={<IconUsers size={24} />} />
-        <KPICard title="Active Users" value="1,080" icon={<IconUserCheck size={24} />} trend={{ value: '+5.2%', isPositive: true }} />
-        <KPICard title="Inactive Users" value="142" icon={<IconUserMinus size={24} />} trend={{ value: '-2.1%', isPositive: true }} />
-        <KPICard title="Blocked Users" value="23" icon={<IconUserX size={24} />} trend={{ value: '+1.4%', isPositive: false }} />
+        <KPICard title="Total Users" value={users.length.toString()} icon={<IconUsers size={24} />} />
+        <KPICard title="Active Users" value={activeUsers.toString()} icon={<IconUserCheck size={24} />} />
+        <KPICard title="Inactive Users" value={(users.length - activeUsers).toString()} icon={<IconUserMinus size={24} />} />
       </KPICardRow>
 
-      <SearchFilterBar 
-        searchPlaceholder="Search users by name or email..."
-        searchValue={searchQuery}
-        onSearchChange={setSearchQuery}
-        filters={filters}
-        onFilterChange={(name, value) => console.log(name, value)}
-      />
-
       <DataTable 
-        data={mockUsers}
+        data={users}
         columns={columns}
       />
-
-      <div className="mt-4">
-        <Pagination 
-          currentPage={currentPage} 
-          totalPages={10} 
-          onPageChange={setCurrentPage} 
-        />
-      </div>
+      
+      {loading && <div className="text-center text-gray-500 py-4">Loading users...</div>}
+      {!loading && users.length === 0 && <div className="text-center text-gray-500 py-4">No users found.</div>}
     </div>
   );
 }

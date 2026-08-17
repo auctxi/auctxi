@@ -46,6 +46,15 @@ const ClientHeader = () => {
           My Auctions
         </NavLink>
         <NavLink
+          to="/client/payments"
+          className={({ isActive }) => cn(
+            "text-base font-medium transition-colors hover:text-primary-500",
+            isActive ? "text-primary-500" : "text-white"
+          )}
+        >
+          Payments
+        </NavLink>
+        <NavLink
           to="/client/profile"
           className={({ isActive }) => cn(
             "text-base font-medium transition-colors hover:text-primary-500",

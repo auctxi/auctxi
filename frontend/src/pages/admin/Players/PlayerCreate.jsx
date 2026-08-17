@@ -3,18 +3,26 @@ import { useNavigate } from 'react-router-dom';
 import PageHeader from '../../../components/ui/PageHeader';
 import Card from '../../../components/ui/Card';
 import Button from '../../../components/ui/Button';
+import { usePlayers } from '../../../hooks/usePlayers';
+import { uploadMedia } from '../../../services/api';
 
 export default function PlayerCreate() {
   const navigate = useNavigate();
+  const { createPlayer } = usePlayers();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [imageFile, setImageFile] = useState(null);
+
   const [formData, setFormData] = useState({
     name: '',
     role: 'Batter',
-    category: 'Capped',
+    category: 'Capped', // Backend expects category object or ID in a real app, might need adjustment
     basePrice: '',
     country: '',
     matches: '',
     runs: '',
     wickets: '',
+    ownerType: 'GLOBAL' // Default to global for admin creation
   });
 
   const handleChange = (e) => {
@@ -22,10 +30,41 @@ export default function PlayerCreate() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setImageFile(e.target.files[0]);
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Submitting player:', formData);
-    navigate('/admin/players');
+    setIsSubmitting(true);
+    setErrorMsg('');
+
+    try {
+      let imageUrl = null;
+      if (imageFile) {
+        const uploadRes = await uploadMedia(imageFile);
+        imageUrl = uploadRes.url;
+      }
+
+      const payload = {
+        name: formData.name,
+        role: formData.role.toUpperCase(),
+        basePrice: parseFloat(formData.basePrice) || 0,
+        country: formData.country,
+        ownerType: formData.ownerType,
+        imageUrl: imageUrl,
+      };
+
+      await createPlayer(payload);
+      navigate('/admin/players');
+    } catch (err) {
+      console.error('Failed to create player:', err);
+      setErrorMsg(err.response?.data?.message || 'Failed to create player. Check inputs.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -35,6 +74,13 @@ export default function PlayerCreate() {
         description="Register a new player for the auction pool."
         backUrl="/admin/players"
       />
+
+      {errorMsg && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
+          <strong className="font-bold">Error: </strong>
+          <span className="block sm:inline">{errorMsg}</span>
+        </div>
+      )}
 
       <Card>
         <form onSubmit={handleSubmit} className="space-y-8">
@@ -76,24 +122,23 @@ export default function PlayerCreate() {
                   onChange={handleChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500 outline-none transition-colors bg-white"
                 >
-                  <option value="Batter">Batter</option>
-                  <option value="Bowler">Bowler</option>
-                  <option value="All-rounder">All-rounder</option>
-                  <option value="Wicketkeeper">Wicketkeeper</option>
+                  <option value="BATTER">Batter</option>
+                  <option value="BOWLER">Bowler</option>
+                  <option value="ALL_ROUNDER">All-rounder</option>
+                  <option value="WICKET_KEEPER">Wicketkeeper</option>
                 </select>
               </div>
               <div className="space-y-2">
-                <label htmlFor="category" className="block text-sm font-medium text-gray-700">Category *</label>
+                <label htmlFor="ownerType" className="block text-sm font-medium text-gray-700">Ownership *</label>
                 <select
-                  id="category"
-                  name="category"
-                  value={formData.category}
+                  id="ownerType"
+                  name="ownerType"
+                  value={formData.ownerType}
                   onChange={handleChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500 outline-none transition-colors bg-white"
                 >
-                  <option value="Capped">Capped</option>
-                  <option value="Uncapped">Uncapped</option>
-                  <option value="Associate">Associate</option>
+                  <option value="GLOBAL">Global (Auction Pool)</option>
+                  <option value="PRIVATE">Private (Team Specific)</option>
                 </select>
               </div>
               <div className="space-y-2">
@@ -111,16 +156,17 @@ export default function PlayerCreate() {
               </div>
               
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">Player Image</label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center text-gray-500 hover:bg-gray-50 hover:border-amber-500 transition-colors cursor-pointer">
-                  <div className="h-10 w-10 bg-gray-100 rounded-full flex items-center justify-center mb-2">
-                    <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                  <span className="text-sm">Click to upload image</span>
-                  <span className="text-xs text-gray-400 mt-1">PNG, JPG up to 2MB</span>
+                <label htmlFor="playerImage" className="block text-sm font-medium text-gray-700">Player Image (Optional)</label>
+                <div className="border border-gray-300 rounded-lg p-2 bg-white flex items-center">
+                  <input
+                    type="file"
+                    id="playerImage"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100"
+                  />
                 </div>
+                {imageFile && <span className="text-xs text-green-600 font-medium">Selected: {imageFile.name}</span>}
               </div>
             </div>
           </div>
@@ -168,11 +214,11 @@ export default function PlayerCreate() {
           </div>
           
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
-            <Button variant="outline" type="button" onClick={() => navigate('/admin/players')}>
+            <Button variant="outline" type="button" onClick={() => navigate('/admin/players')} disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button variant="primary" type="submit">
-              Save Player
+            <Button variant="primary" type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Saving...' : 'Save Player'}
             </Button>
           </div>
         </form>

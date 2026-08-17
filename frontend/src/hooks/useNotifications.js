@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { Client } from '@stomp/stompjs';
+import SockJS from 'sockjs-client';
+import { toast } from 'react-toastify';
 
 export const useNotifications = () => {
   const [notifications, setNotifications] = useState([]);
@@ -25,10 +28,48 @@ export const useNotifications = () => {
 
   useEffect(() => {
     fetchNotifications();
-    // Optional: Add polling here if real-time web sockets are not implemented for notifications
-    const interval = setInterval(fetchNotifications, 30000); // Poll every 30s
-    return () => clearInterval(interval);
-  }, [fetchNotifications]);
+    
+    // Background polling fallback (less aggressive since we have WebSockets)
+    const interval = setInterval(fetchNotifications, 60000); 
+
+    let client = null;
+    if (user?.id) {
+       client = new Client({
+          webSocketFactory: () => new SockJS('/ws-auction'),
+          reconnectDelay: 10000,
+       });
+       
+       client.onConnect = () => {
+          client.subscribe(`/topic/user-notifications/${user.id}`, (message) => {
+             if (message.body) {
+                const newNotif = JSON.parse(message.body);
+                setNotifications(prev => {
+                   if (prev.some(n => n.id === newNotif.id)) return prev;
+                   
+                   // Show a toast notification for instant visibility
+                   toast.info(newNotif.title, {
+                      position: "top-right",
+                      autoClose: 3000,
+                      hideProgressBar: false,
+                      closeOnClick: true,
+                      pauseOnHover: true,
+                      draggable: true,
+                   });
+                   
+                   return [newNotif, ...prev]; // Add to top
+                });
+             }
+          });
+       };
+       
+       client.activate();
+    }
+
+    return () => {
+       clearInterval(interval);
+       if (client) client.deactivate();
+    };
+  }, [fetchNotifications, user?.id]);
 
   const markAsRead = async (id) => {
     try {
